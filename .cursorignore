@@ -1,0 +1,68 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+# Build outputs
+/build/
+/app/build/
+/.gradle/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE configs
+/.idea/
+*.iml
+local.properties
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Generated files
+*.generated.kt
+**/generated/
+/schemas/
+
+# Test files
+**/test/
+**/androidTest/
+**/sharedTest/
+
+# Resource files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.webp
+*.svg
+
+# Gradle files
+gradle/
+gradlew
+gradlew.bat
+gradle.properties
+settings.gradle.kts
+
+# Configuration files
+proguard-rules.pro
+*.pro
+backup_rules.xml
+data_extraction_rules.xml
+
+# Version control
+.git/
+.gitignore
+
+# Google Services
+google-services.json
+
+# XML layouts (optional - uncomment if you want to ignore)
+# **/res/layout/*.xml
+# **/res/menu/*.xml
+# **/res/drawable/*.xml
+# **/res/values/*.xml
