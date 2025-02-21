@@ -21,6 +21,28 @@ class HomeActivity : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
+
+        setupBottomNavigation()
+    }
+
+    fun updateUserInfo(username: String) {
+        binding.tvUserName.text = username
+    }
+
+    private fun setupBottomNavigation() {
+        binding.bottomNav.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    navController.navigate(R.id.homeFragment)
+                    true
+                }
+                R.id.nav_more -> {
+                    navController.navigate(R.id.action_home_to_more)
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

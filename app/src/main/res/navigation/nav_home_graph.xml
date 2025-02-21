@@ -24,6 +24,13 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_home_to_more"
+            app:destination="@id/moreFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/allCategoriesFragment"
@@ -35,4 +42,9 @@
         android:name="com.healthtech.doccareplus.ui.doctor.AllDoctorsFragment"
         android:label="AllDoctorsFragment"
         tools:layout="@layout/fragment_all_doctors" />
+    <fragment
+        android:id="@+id/moreFragment"
+        android:name="com.healthtech.doccareplus.ui.more.MoreFragment"
+        android:label="MoreFragment"
+        tools:layout="@layout/fragment_more" />
 </navigation>

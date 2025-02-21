@@ -104,10 +104,17 @@ class HomeFragment : Fragment() {
     }
 
     private fun observeCurrentUser() {
+        // viewLifecycleOwner.lifecycleScope.launch {
+        //     viewModel.currentUser.collect { user ->
+        //         binding.tvUserName.text =
+        //             user?.name ?: requireContext().getString(R.string.placeholder_username)
+        //     }
+        // }
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.currentUser.collect { user ->
-                binding.tvUserName.text =
-                    user?.name ?: requireContext().getString(R.string.placeholder_username)
+                user?.let {
+                    (activity as? HomeActivity)?.updateUserInfo(it.name)
+                }
             }
         }
     }
