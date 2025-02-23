@@ -14,7 +14,7 @@
 
         <!-- Profile -->
         <LinearLayout
-            android:id="@+id/ll_profile"
+            android:id="@+id/btn_profile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
@@ -54,7 +54,7 @@
 
         <!-- Favourite Doctors -->
         <LinearLayout
-            android:id="@+id/ll_favourite_doctors"
+            android:id="@+id/btn_favourite_doctors"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"
@@ -94,7 +94,7 @@
 
         <!-- General Settings -->
         <LinearLayout
-            android:id="@+id/ll_general_settings"
+            android:id="@+id/btn_general_settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/selectableItemBackground"

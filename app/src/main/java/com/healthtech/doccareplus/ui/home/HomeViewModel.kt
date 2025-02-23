@@ -2,9 +2,13 @@ package com.healthtech.doccareplus.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
+import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.data.local.preferences.UserPreferences
+import com.healthtech.doccareplus.databinding.ActivityHomeBinding
 import com.healthtech.doccareplus.domain.model.Category
 import com.healthtech.doccareplus.domain.model.Doctor
+import com.healthtech.doccareplus.domain.model.Gender
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.domain.repository.AuthRepository
 import com.healthtech.doccareplus.domain.repository.CategoryRepository
@@ -29,12 +33,42 @@ class HomeViewModel @Inject constructor(
     val currentUser = _currentUser.asStateFlow()
 
     init {
-        getCurrentUser()
+        loadCurrentUser()
     }
 
-    private fun getCurrentUser() {
+    private fun loadCurrentUser() {
         viewModelScope.launch {
-            _currentUser.value = authRepository.getCurrentUser()
+            try {
+                val result = authRepository.getCurrentUser()
+                result.onSuccess { user ->
+                    _currentUser.value = user
+                }.onFailure { error ->
+                    // Handle error if needed
+                }
+            } catch (e: Exception) {
+                // Handle exception if needed
+            }
+        }
+    }
+
+    fun updateUserUI(binding: ActivityHomeBinding, user: User) {
+        binding.tvUserName.text = user.name
+
+        binding.ivUserAvatar.apply {
+            if (user.avatar.isNullOrEmpty()) {
+                setImageResource(
+                    when (user.gender) {
+                        Gender.MALE -> R.mipmap.avatar_male_default
+                        Gender.FEMALE -> R.mipmap.avatar_female_default
+                        else -> R.mipmap.avatar_bear_default
+                    }
+                )
+            } else {
+                Glide.with(this)
+                    .load(user.avatar)
+                    .error(R.mipmap.avatar_bear_default)
+                    .into(this)
+            }
         }
     }
 }

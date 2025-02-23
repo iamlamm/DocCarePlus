@@ -46,5 +46,45 @@
         android:id="@+id/moreFragment"
         android:name="com.healthtech.doccareplus.ui.more.MoreFragment"
         android:label="MoreFragment"
-        tools:layout="@layout/fragment_more" />
+        tools:layout="@layout/fragment_more">
+        <action
+            android:id="@+id/action_more_to_profile"
+            app:destination="@id/profileFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_home"
+        app:destination="@id/homeFragment"
+        app:popUpTo="@id/nav_home_graph"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_global_doctors"
+        app:destination="@id/allDoctorsFragment"
+        app:popUpTo="@id/nav_home_graph"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_global_more"
+        app:destination="@id/moreFragment"
+        app:popUpTo="@id/nav_home_graph"
+        app:popUpToInclusive="true" />
+    <action
+        android:id="@+id/action_global_profile"
+        app:destination="@id/profileFragment"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/slide_out_left"
+        app:popEnterAnim="@anim/slide_in_left"
+        app:popExitAnim="@anim/slide_out_right" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.healthtech.doccareplus.ui.profile.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" />
+
 </navigation>

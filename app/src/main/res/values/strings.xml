@@ -69,4 +69,22 @@
     <string name="more_item_profỉe">Profile</string>
     <string name="more_item_favourite_doctors">Favourite Doctors</string>
     <string name="more_item_general_settings">General Settings</string>
+    <string name="profile_header">Profile</string>
+    <string name="label_profile_height">Height</string>
+    <string name="format_profile_height">%s in</string>
+    <string name="label_profile_weight">Weight</string>
+    <string name="format_profile_weight">%s kg</string>
+    <string name="label_profile_age">Age</string>
+    <string name="format_profile_age">%s</string>
+    <string name="label_profile_blood">Blood</string>
+    <string name="format_profile_blood">%s</string>
+    <string name="title_find_your_doctor">Find Your Doctor</string>
+    <string name="doctor_biography_title">Doctor Biography</string>
+    <string name="placeholder_doctor_biography_content">Eion Morgan is a dedicated pediatrician with over 15 years of experience in caring for children\'s health. She is passionate about ensuring the well-being of your little ones and believes in a holistic approach.</string>
+    <string name="no_about_content">No bio yet</string>
+    <string name="error">Lỗi</string>
+    <string name="ok">Đã hiểu</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirmation">Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?</string>
+    <string name="cancel">Hủy</string>
 </resources>

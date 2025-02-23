@@ -1,5 +1,6 @@
 package com.healthtech.doccareplus.ui.home
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,6 +17,7 @@ import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentHomeBinding
 import com.healthtech.doccareplus.ui.adapter.CategoryAdapter
 import com.healthtech.doccareplus.ui.adapter.DoctorAdapter
+import com.healthtech.doccareplus.ui.category.AllCategoriesFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -45,7 +47,6 @@ class HomeFragment : Fragment() {
         setupClickListeners()
         setupRecyclerView()
         setupBannerSlider()
-        observeCurrentUser()
         observeCategories()
         observeDoctors()
     }
@@ -75,6 +76,8 @@ class HomeFragment : Fragment() {
         binding.apply {
             tvSeeAllCategory.setOnClickListener {
                 findNavController().navigate(R.id.action_home_to_allCategories)
+                // val intent = Intent(requireContext(), AllCategoriesFragment::class.java)
+                // startActivity(intent)
             }
 
             tvSeeAllDoctor.setOnClickListener {
@@ -103,21 +106,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun observeCurrentUser() {
-        // viewLifecycleOwner.lifecycleScope.launch {
-        //     viewModel.currentUser.collect { user ->
-        //         binding.tvUserName.text =
-        //             user?.name ?: requireContext().getString(R.string.placeholder_username)
-        //     }
-        // }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.currentUser.collect { user ->
-                user?.let {
-                    (activity as? HomeActivity)?.updateUserInfo(it.name)
-                }
-            }
-        }
-    }
 
     private fun observeCategories() {
         viewLifecycleOwner.lifecycleScope.launch {

@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.healthtech.doccareplus.databinding.FragmentAllCategoriesBinding
+import com.healthtech.doccareplus.ui.home.HomeActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -59,7 +60,7 @@ class AllCategoriesFragment : Fragment() {
     private fun observeCategories() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.categories.catch { error ->
-                Snackbar.make(binding.root,error.message!!,Snackbar.LENGTH_LONG)
+                Snackbar.make(binding.root, error.message!!, Snackbar.LENGTH_LONG)
             }.collect { categories ->
                 allCategoryAdapter.setCategories(categories)
             }
