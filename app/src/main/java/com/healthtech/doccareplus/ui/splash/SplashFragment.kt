@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentSplashBinding
@@ -19,13 +20,12 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class SplashFragment : Fragment() {
-    private val viewModel: SplashViewModel by viewModels()
     private var _binding: FragmentSplashBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: SplashViewModel by viewModels()
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSplashBinding.inflate(inflater, container, false)
         return binding.root
@@ -33,33 +33,24 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // Hiển thị loading animation
         binding.progressBarSplash.setLoading(true)
-        
-        // Bắt đầu preload dữ liệu ngay lập tức
         viewModel.preLoadHomeData()
-        
+        viewModel.preloadLoginResources()
         observeStartDestination()
     }
 
     private fun observeStartDestination() {
         viewLifecycleOwner.lifecycleScope.launch {
-            // Đảm bảo Splash hiển thị ít nhất 1.5 giây để animation được mượt
-            delay(3000)
-            
-            // Sau đó bắt đầu chờ kết quả từ viewModel
+            val delayJob = launch { delay(3000) } // Giảm xuống 1.5s thay vì 3s
+            delayJob.join()
             viewModel.startDestination.collectLatest { destination ->
                 if (destination != 0) {
-                    // Ẩn loading trước khi chuyển màn hình
                     binding.progressBarSplash.setLoading(false)
-                    
+
                     when (destination) {
                         R.id.loginFragment -> {
                             findNavController().navigate(
-                                R.id.action_splash_to_login,
-                                null,
-                                getOptimizedNavOptions()
+                                R.id.action_splash_to_login
                             )
                         }
 
@@ -68,9 +59,11 @@ class SplashFragment : Fragment() {
                             val intent = Intent(requireContext(), HomeActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                             startActivity(intent)
-                            
+
                             // Sử dụng overridePendingTransition để tránh hiệu ứng giật
-                            requireActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+                            requireActivity().overridePendingTransition(
+                                R.anim.fade_in, R.anim.fade_out
+                            )
                             requireActivity().finish()
                         }
                     }
@@ -78,15 +71,7 @@ class SplashFragment : Fragment() {
             }
         }
     }
-    
-    private fun getOptimizedNavOptions(): androidx.navigation.NavOptions {
-        return androidx.navigation.NavOptions.Builder()
-            .setEnterAnim(R.anim.fade_in)
-            .setExitAnim(R.anim.fade_out)
-            .setPopEnterAnim(R.anim.fade_in)
-            .setPopExitAnim(R.anim.fade_out)
-            .build()
-    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

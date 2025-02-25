@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4fecf0a9ee6ce2695bc55935a56703fe",
+    "identityHash": "bd4365cb3834b2d7bfd14370f7494f2e",
     "entities": [
       {
         "tableName": "categories",
@@ -50,7 +50,7 @@
       },
       {
         "tableName": "doctors",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `code` TEXT NOT NULL, `name` TEXT NOT NULL, `specialty` TEXT NOT NULL, `rating` REAL NOT NULL, `reviews` INTEGER NOT NULL, `fee` REAL NOT NULL, `image` TEXT NOT NULL, `available` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `code` TEXT NOT NULL, `name` TEXT NOT NULL, `specialty` TEXT NOT NULL, `categoryId` INTEGER NOT NULL, `rating` REAL NOT NULL, `reviews` INTEGER NOT NULL, `fee` REAL NOT NULL, `image` TEXT NOT NULL, `available` INTEGER NOT NULL, `biography` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -74,6 +74,12 @@
             "fieldPath": "specialty",
             "columnName": "specialty",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "categoryId",
+            "columnName": "categoryId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -105,6 +111,12 @@
             "columnName": "available",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "biography",
+            "columnName": "biography",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -120,7 +132,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4fecf0a9ee6ce2695bc55935a56703fe')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bd4365cb3834b2d7bfd14370f7494f2e')"
     ]
   }
 }

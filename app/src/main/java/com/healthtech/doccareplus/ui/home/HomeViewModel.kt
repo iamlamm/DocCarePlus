@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -112,5 +113,45 @@ class HomeViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         // BaseDataViewModel đã xử lý việc hủy các job và cache
+    }
+
+    /**
+     * Preload các tài nguyên cần thiết cho màn hình AllCategories
+     * Giúp chuyển màn hình mượt mà hơn
+     */
+    fun preloadCategoriesScreen() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Kích hoạt flow observeCategories nhưng chỉ lấy giá trị đầu tiên (local data)
+                categoryRepository.observeCategories().first()
+                
+                // Không cần thiết phải refreshCategories() vì:
+                // 1. observeCategories() đã tự động fetch từ remote sau khi emit local
+                // 2. Nếu vẫn muốn refresh, có thể làm như sau:
+                /*
+                launch { 
+                    // Gọi phương thức refresh từ BaseDataViewModel
+                    refreshCategories(categoryRepository)
+                }
+                */
+            } catch (e: Exception) {
+                // Bỏ qua lỗi khi preload - không ảnh hưởng UX
+            }
+        }
+    }
+
+    /**
+     * Preload các tài nguyên cần thiết cho màn hình AllDoctors
+     * Giúp chuyển màn hình mượt mà hơn
+     */
+    fun preloadDoctorsScreen() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Tương tự như categories
+                doctorRepository.observeDoctors().first()
+            } catch (e: Exception) {
+                // Bỏ qua lỗi khi preload
+            }
+        }
     }
 }

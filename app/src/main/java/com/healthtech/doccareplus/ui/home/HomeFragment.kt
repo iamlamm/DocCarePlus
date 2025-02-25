@@ -21,6 +21,7 @@ import com.healthtech.doccareplus.ui.home.adapter.CategoryAdapter
 import com.healthtech.doccareplus.ui.home.adapter.DoctorAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -92,11 +93,24 @@ class HomeFragment : BaseFragment() {
     private fun setupClickListeners() {
         binding.apply {
             tvSeeAllCategory.setOnClickListener {
-                findNavController().navigate(R.id.action_home_to_allCategories)
+                // Preload trước khi chuyển màn hình
+                viewModel.preloadCategoriesScreen()
+                
+                // Delay nhỏ (không cần thiết nếu bạn đã cài đặt transition animations)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    delay(50) // Delay rất nhỏ, đủ để kích hoạt preload
+                    findNavController().navigate(R.id.action_home_to_allCategories)
+                }
             }
 
             tvSeeAllDoctor.setOnClickListener {
-                findNavController().navigate(R.id.action_home_to_allDoctors)
+                // Tương tự, preload cho Doctors
+                viewModel.preloadDoctorsScreen()
+                
+                viewLifecycleOwner.lifecycleScope.launch {
+                    delay(50)
+                    findNavController().navigate(R.id.action_home_to_allDoctors)
+                }
             }
         }
     }

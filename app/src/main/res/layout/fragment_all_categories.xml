@@ -14,7 +14,7 @@
             android:background="@color/white"
             android:elevation="4dp"
             app:titleCentered="true"
-            app:navigationIcon="@drawable/back2"
+            app:navigationIcon="@drawable/custom_btn_back"
             app:title="Find Your Doctor"
             app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             app:menu="@menu/search_menu" />
@@ -63,5 +63,11 @@
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:spanCount="3"
         tools:listitem="@layout/item_all_category" />
+
+<!--    <com.healthtech.doccareplus.ui.widgets.loading.LoadingView-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:id="@+id/progressBarAllCategories"-->
+<!--        android:layout_height="wrap_content"/>-->
 
 </LinearLayout>

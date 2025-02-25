@@ -10,9 +10,11 @@ data class DoctorEntity(
     val code: String,
     val name: String,
     val specialty: String,
+    val categoryId: Int,
     val rating: Float,
     val reviews: Long,
     val fee: Double,
     val image: String,
-    val available: Boolean
+    val available: Boolean,
+    val biography: String
 )

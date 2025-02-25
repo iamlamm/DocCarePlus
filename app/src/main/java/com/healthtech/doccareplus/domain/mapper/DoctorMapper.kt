@@ -9,11 +9,13 @@ fun DoctorEntity.toDoctor(): Doctor {
         code = code,
         name = name,
         specialty = specialty,
+        categoryId = categoryId,
         rating = rating,
         reviews = reviews,
         fee = fee,
         image = image,
-        available = available
+        available = available,
+        biography = biography
     )
 }
 
@@ -23,10 +25,12 @@ fun Doctor.toDoctorEntity(): DoctorEntity {
         code = code,
         name = name,
         specialty = specialty,
+        categoryId = categoryId,
         rating = rating,
         reviews = reviews,
         fee = fee,
         image = image,
-        available = available
+        available = available,
+        biography = biography
     )
 }

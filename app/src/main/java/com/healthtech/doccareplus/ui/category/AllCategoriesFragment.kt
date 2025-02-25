@@ -12,9 +12,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.healthtech.doccareplus.common.base.BaseFragment
+import com.healthtech.doccareplus.common.state.UiState
 import com.healthtech.doccareplus.databinding.FragmentAllCategoriesBinding
 import com.healthtech.doccareplus.ui.category.adapter.AllCategoriesAdapter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -28,6 +30,7 @@ class AllCategoriesFragment : BaseFragment() {
     
     // Để theo dõi xem đã setup observers chưa để tránh setup lại
     private var hasSetupObservers = false
+    private var isFirstLoad = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,6 +43,9 @@ class AllCategoriesFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // Hiển thị loading indicator ngay lập tức
+//        binding.progressBarAllCategories.visibility = View.VISIBLE
+        
         // Initialization in order of priority
         setupToolbar()
         setupAdapter()
@@ -48,7 +54,6 @@ class AllCategoriesFragment : BaseFragment() {
         // Kiểm tra trạng thái đã load dữ liệu chưa
         if (!hasSetupObservers) {
             observeCategories()
-//            setupSwipeRefresh()
             hasSetupObservers = true
         }
     }
@@ -65,16 +70,17 @@ class AllCategoriesFragment : BaseFragment() {
     private fun setupAdapter() {
         allCategoriesAdapter = AllCategoriesAdapter().apply {
             setOnCategoryClickListener { category ->
-                // TODO: Navigate to category detail
-                // Ví dụ: findNavController().navigate(
-                //     AllCategoriesFragmentDirections.actionToCategoryDetail(category.id)
-                // )
-                
-                Snackbar.make(
-                    binding.root,
-                    "Selected category: ${category.name}",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+//                // Xử lý click
+//                Snackbar.make(
+//                    binding.root,
+//                    "Selected category: ${category.name}",
+//                    Snackbar.LENGTH_SHORT
+//                ).show()
+                val action = AllCategoriesFragmentDirections.actionAllCategoriesToAllDoctors(
+                    categoryId = category.id,
+                    categoryName = category.name
+                )
+                findNavController().navigate(action)
             }
         }
     }
@@ -83,59 +89,70 @@ class AllCategoriesFragment : BaseFragment() {
         binding.rcvAllCategories.apply {
             adapter = allCategoriesAdapter
             layoutManager = GridLayoutManager(requireContext(), 3)
-            // Có thể thêm ItemDecoration nếu cần
+            // Tắt animation để tăng hiệu suất
+            itemAnimator = null
+            // Tối ưu performance
+            setHasFixedSize(true)
         }
     }
-    
-//    private fun setupSwipeRefresh() {
-//        // Nếu layout có SwipeRefreshLayout
-//        if (::_binding.isInitialized && _binding != null && _binding!!::swipeRefresh.isInitialized) {
-//            binding.swipeRefresh.setOnRefreshListener {
-//                viewModel.refreshCategoriesIfNeeded()
-//            }
-//        }
-//    }
 
     private fun observeCategories() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 // Quan sát dữ liệu categories
                 viewModel.categories.collectLatest { state ->
-//                    // Tắt SwipeRefreshLayout nếu đang hiển thị
-//                    if (::_binding.isInitialized && _binding != null &&
-//                        _binding!!::swipeRefresh.isInitialized) {
-//                        binding.swipeRefresh.isRefreshing = false
-//                    }
-                    
-                    handleUiState(
-                        state = state,
-                        onSuccess = { categories ->
-                            // Cập nhật UI với dữ liệu mới
-                            allCategoriesAdapter.setCategories(categories)
-                        },
-                        onError = { message ->
+                    when (state) {
+                        is UiState.Success -> {
+                            val categories = state.data
+                            // Lazy loading để tăng tốc độ hiển thị ban đầu
+                            if (isFirstLoad && categories.size > 10) {
+                                // Hiển thị 10 item đầu tiên trước
+                                allCategoriesAdapter.setCategories(categories.take(10))
+                                
+                                // Sau đó mới hiển thị đầy đủ - trong coroutine scope
+                                launch {
+                                    delay(150)
+                                    allCategoriesAdapter.setCategories(categories)
+                                    isFirstLoad = false
+                                }
+                            } else {
+                                allCategoriesAdapter.setCategories(categories)
+                                if (isFirstLoad) isFirstLoad = false
+                            }
+                        }
+                        is UiState.Error -> {
                             // Hiển thị thông báo lỗi
-                            Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
+                            Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG)
                                 .setAction("Retry") {
-                                    viewModel.refreshCategoriesIfNeeded()
+                                    viewModel.refreshCategories()
                                 }
                                 .show()
                         }
-                    )
+                        else -> {
+                            // Xử lý các trạng thái khác
+                        }
+                    }
                 }
                 
                 // Quan sát trạng thái đã tải xong chưa
                 viewModel.isInitialDataLoaded.collect { isLoaded ->
-                    // Bạn có thể sử dụng trạng thái này để ẩn một loading indicator
-                    // binding.loadingIndicator.visibility = if (isLoaded) View.GONE else View.VISIBLE
+//                    binding.progressBarAllCategories.visibility = if (isLoaded) View.GONE else View.VISIBLE
                 }
             }
         }
     }
 
+    // Thay đổi onResume để tránh refresh ngay lập tức
     override fun onResume() {
         super.onResume()
-        viewModel.refreshCategoriesIfNeeded()
+        
+        // Chỉ refresh sau khi đã hoàn tất animation chuyển màn hình
+        if (!isFirstLoad) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                delay(300) // Đợi animation chuyển màn hình hoàn tất
+                viewModel.checkAndRefreshIfNeeded()
+            }
+        }
     }
 
     override fun cleanupViewReferences() {

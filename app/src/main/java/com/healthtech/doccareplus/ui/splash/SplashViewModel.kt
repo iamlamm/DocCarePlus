@@ -27,6 +27,10 @@ class SplashViewModel @Inject constructor(
     // Trạng thái loading để theo dõi tiến trình tải dữ liệu
     private val _isDataPreloaded = MutableStateFlow(false)
     val isDataPreloaded = _isDataPreloaded.asStateFlow()
+    
+    // Trạng thái preload login resources
+    private val _loginResourcesPreloaded = MutableStateFlow(false)
+    val loginResourcesPreloaded = _loginResourcesPreloaded.asStateFlow()
 
     init {
         checkLoginStatus()
@@ -49,24 +53,43 @@ class SplashViewModel @Inject constructor(
             _startDestination.value = destination
         }
     }
-
+    
+    fun preloadLoginResources() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Tải trước các tài nguyên cần thiết cho LoginFragment
+                
+                // 1. Tải trước các cấu hình đăng nhập (nếu có)
+//                userPreferences.getUser()
+                
+                // 2. Tải trước các tài nguyên hình ảnh (nếu có)
+                withContext(Dispatchers.Main) {
+                    // Giúp tải trước các tài nguyên UI
+                    // Một số cách tiếp cận có thể là:
+                    // - Sử dụng Glide/Picasso để tải trước hình ảnh
+                    // - Inflate layouts không hiển thị để cache chúng
+                }
+                
+                // 3. Tải trước language resources hoặc các thông tin khác
+                
+                _loginResourcesPreloaded.value = true
+            } catch (e: Exception) {
+                // Log lỗi nếu có
+                _loginResourcesPreloaded.value = true // Vẫn tiếp tục chuyển màn hình
+            }
+        }
+    }
+    
     fun preLoadHomeData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Tải song song các loại dữ liệu để tối ưu thời gian
-                launch { categoryRepository.observeCategories().first() }
-                launch { doctorRepository.observeDoctors().first() }
-                
-                // Đánh dấu đã tải xong dữ liệu
-                withContext(Dispatchers.Main) {
-                    _isDataPreloaded.value = true
-                }
+                val categoriesJob = launch { categoryRepository.observeCategories().first() }
+                val doctorsJob = launch { doctorRepository.observeDoctors().first() }
+                categoriesJob.join()
+                doctorsJob.join()
+                _isDataPreloaded.value = true
             } catch (e: Exception) {
-                // Log lỗi nếu cần thiết, nhưng vẫn cho phép tiếp tục
-                // để tránh kẹt ở màn hình splash
-                withContext(Dispatchers.Main) {
-                    _isDataPreloaded.value = true
-                }
+                _isDataPreloaded.value = true
             }
         }
     }

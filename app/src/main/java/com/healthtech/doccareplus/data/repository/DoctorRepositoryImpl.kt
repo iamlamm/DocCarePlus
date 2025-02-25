@@ -64,4 +64,49 @@ class DoctorRepositoryImpl @Inject constructor(
         }
 
     }
+
+    // Thêm phương thức lọc bác sĩ theo category
+    override fun getDoctorsByCategory(categoryId: Int): Flow<Result<List<Doctor>>> = channelFlow {
+        launch {
+            try {
+                // Đầu tiên emit dữ liệu local đã được lọc
+                localDataSource.getDoctors().catch { e ->
+                    if (e !is CancellationException) {
+                        send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
+                    }
+                }.map { listEntities ->
+                    // Lọc theo categoryId và chuyển đổi thành Doctor
+                    listEntities.filter { it.categoryId == categoryId }
+                              .map { it.toDoctor() }
+                }.collect { filteredDoctors ->
+                    if (filteredDoctors.isNotEmpty()) {
+                        send(Result.success(filteredDoctors))
+                    }
+                }
+            } catch (e: Exception) {
+                send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
+                Log.e("DoctorRepository", "Error loading local data by category", e)
+            }
+        }
+
+        launch {
+            // Remote
+            try {
+                remoteDataSource.getDoctors().catch { e ->
+                    if (e !is CancellationException) {
+                        send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                    }
+                }.map { doctors ->
+                    // Lọc remote data theo categoryId
+                    doctors.filter { it.categoryId == categoryId }
+                }.collect { filteredDoctors ->
+                    // Không cần lưu lại vào local database vì đã được lưu đầy đủ bởi observeDoctors()
+                    send(Result.success(filteredDoctors))
+                }
+            } catch (e: Exception) {
+                send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                Log.e("DoctorRepository", "Error fetching remote data by category", e)
+            }
+        }
+    }
 }
