@@ -49,8 +49,8 @@
         <action
             android:id="@+id/action_splash_to_login"
             app:destination="@id/loginFragment"
-            app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/fade_out"
+            app:enterAnim="@anim/ultra_smooth_fade_in"
+            app:exitAnim="@anim/ultra_smooth_fade_out"
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true"
             app:launchSingleTop="true" />

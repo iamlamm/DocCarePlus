@@ -19,6 +19,9 @@ class RegisterViewModel @Inject constructor(
     val registerState = _registerState.asStateFlow()
 
     fun register(name: String, email: String, password: String, phoneNumber: String) {
+        if (_registerState.value is RegisterState.Loading) {
+            return
+        }
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
             try {
@@ -37,5 +40,8 @@ class RegisterViewModel @Inject constructor(
                 )
             }
         }
+    }
+    fun resetRegisterState() {
+        _registerState.value = RegisterState.Idle
     }
 }

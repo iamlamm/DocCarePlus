@@ -1,9 +1,11 @@
 package com.healthtech.doccareplus.ui.auth.forgotpassword
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -13,6 +15,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentForgotPasswordBinding
 import com.healthtech.doccareplus.utils.ValidationUtils
+import com.healthtech.doccareplus.utils.showErrorDialog
+import com.healthtech.doccareplus.utils.showSuccessDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -24,8 +28,7 @@ class ForgotPasswordFragment : Fragment() {
     private var hasEmailFocused = false
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentForgotPasswordBinding.inflate(inflater, container, false)
         return binding.root
@@ -41,6 +44,7 @@ class ForgotPasswordFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnForgotPasswordSubmit.setOnClickListener {
+            hideKeyboard()
             val email = binding.etForgotPasswordEmail.text.toString()
             viewModel.resetPassword(email)
         }
@@ -58,13 +62,27 @@ class ForgotPasswordFragment : Fragment() {
                     is ForgotPasswordState.Success -> {
                         binding.progressBarForgotPassword.visibility = View.GONE
                         binding.btnForgotPasswordSubmit.isEnabled = true
-                        showSuccessDialog()
+//                        showSuccessDialog()
+                        showSuccessDialog(title = "Thành công",
+                            message = "Email khôi phục mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn.",
+                            positiveText = "Đến đăng nhập",
+                            cancelable = false,
+                            onPositive = {
+                                viewModel.resetForgotPasswordState()
+                                findNavController().navigate(R.id.action_forgot_password_to_login)
+                            })
                     }
 
                     is ForgotPasswordState.Error -> {
                         binding.progressBarForgotPassword.visibility = View.GONE
                         binding.btnForgotPasswordSubmit.isEnabled = true
-                        showErrorDialog(state.message)
+//                        showErrorDialog(state.message)
+                        showErrorDialog(title = "Lỗi",
+                            message = state.message,
+                            positiveText = "Đã hiểu",
+                            onPositive = {
+                                viewModel.resetForgotPasswordState()
+                            })
                     }
 
                     else -> {
@@ -76,24 +94,24 @@ class ForgotPasswordFragment : Fragment() {
         }
     }
 
-    private fun showErrorDialog(message: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Lỗi")
-            .setMessage(message)
-            .setPositiveButton("Đã hiểu", null)
-            .show()
-    }
-
-    private fun showSuccessDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Thành công")
-            .setMessage("Email khôi phục mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn.")
-            .setPositiveButton("Đến đăng nhập") { _, _ ->
-                findNavController().navigate(R.id.action_forgot_password_to_login)
-            }
-            .setCancelable(false)
-            .show()
-    }
+//    private fun showErrorDialog(message: String) {
+//        MaterialAlertDialogBuilder(requireContext())
+//            .setTitle("Lỗi")
+//            .setMessage(message)
+//            .setPositiveButton("Đã hiểu", null)
+//            .show()
+//    }
+//
+//    private fun showSuccessDialog() {
+//        MaterialAlertDialogBuilder(requireContext())
+//            .setTitle("Thành công")
+//            .setMessage("Email khôi phục mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn.")
+//            .setPositiveButton("Đến đăng nhập") { _, _ ->
+//                findNavController().navigate(R.id.action_forgot_password_to_login)
+//            }
+//            .setCancelable(false)
+//            .show()
+//    }
 
     private fun setupEmailValidation() {
         binding.etForgotPasswordEmail.setOnFocusChangeListener { _, hasFocus ->
@@ -128,6 +146,15 @@ class ForgotPasswordFragment : Fragment() {
                 binding.tilForgotPasswordEmail.error = null
                 true
             }
+        }
+    }
+
+    private fun hideKeyboard() {
+        val inputMethodManager =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocusedView = requireActivity().currentFocus
+        if (currentFocusedView != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocusedView.windowToken, 0)
         }
     }
 

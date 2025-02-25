@@ -34,4 +34,8 @@ class ForgotPasswordViewModel @Inject constructor(
             }
         }
     }
+
+    fun resetForgotPasswordState() {
+        _forgotPasswordState.value = ForgotPasswordState.Idle
+    }
 }

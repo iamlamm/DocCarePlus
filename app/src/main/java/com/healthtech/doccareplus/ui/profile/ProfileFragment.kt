@@ -10,12 +10,13 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentProfileBinding
 import com.healthtech.doccareplus.domain.model.Gender
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.ui.auth.AuthActivity
+import com.healthtech.doccareplus.utils.showErrorDialog
+import com.healthtech.doccareplus.utils.showWarningDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -40,7 +41,16 @@ class ProfileFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
-        binding.btnLogout.setOnClickListener { showLogoutDialog() }
+        binding.btnLogout.setOnClickListener {
+            showWarningDialog(
+                title = getString(R.string.logout),
+                message = getString(R.string.logout_confirmation),
+                positiveText = getString(R.string.logout),
+                negativeText = getString(R.string.cancel),
+                onPositive = {
+                    logout()
+                })
+        }
     }
 
     private fun observeProfileState() {
@@ -55,7 +65,11 @@ class ProfileFragment : Fragment() {
                     }
 
                     is ProfileState.Error -> {
-                        showErrorDialog(state.message)
+                        showErrorDialog(
+                            title = getString(R.string.error),
+                            message = state.message,
+                            positiveText = getString(R.string.ok)
+                        )
                     }
                 }
             }
@@ -90,25 +104,6 @@ class ProfileFragment : Fragment() {
                     .error(R.mipmap.avatar_bear_default).into(ivProfile)
             }
         }
-    }
-
-    private fun showErrorDialog(message: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.error))
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.ok), null)
-            .show()
-    }
-
-    private fun showLogoutDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.logout))
-            .setMessage(getString(R.string.logout_confirmation))
-            .setNegativeButton(getString(R.string.cancel), null)
-            .setPositiveButton(getString(R.string.logout)) { _, _ ->
-                logout()
-            }
-            .show()
     }
 
     private fun logout() {

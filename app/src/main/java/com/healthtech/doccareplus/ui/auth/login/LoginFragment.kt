@@ -1,5 +1,7 @@
 package com.healthtech.doccareplus.ui.auth.login
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -7,6 +9,7 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +19,7 @@ import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentLoginBinding
 import com.healthtech.doccareplus.ui.home.HomeActivity
 import com.healthtech.doccareplus.utils.ValidationUtils
+import com.healthtech.doccareplus.utils.showErrorDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -46,13 +50,11 @@ class LoginFragment : Fragment() {
 
     private fun setupFocusListeners() {
         binding.apply {
-            binding.apply {
-                etLoginEmail.setOnFocusChangeListener { _, hasFocus ->
-                    if (!hasFocus) hasEmailFocused = true
-                }
-                etLoginPassword.setOnFocusChangeListener { _, hasFocus ->
-                    if (!hasFocus) hasPasswordFocused = true
-                }
+            etLoginEmail.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) hasEmailFocused = true
+            }
+            etLoginPassword.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) hasPasswordFocused = true
             }
         }
     }
@@ -78,9 +80,12 @@ class LoginFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnLoginSubmit.setOnClickListener {
+            hideKeyboard()
             val email = binding.etLoginEmail.text.toString()
             val password = binding.etLoginPassword.text.toString()
             val rememberMe = binding.cbRememberMe.isChecked
+            binding.btnLoginSubmit.isEnabled = false
+            binding.progressBarLogin.visibility = View.VISIBLE
             viewModel.login(email, password, rememberMe)
         }
 
@@ -118,11 +123,23 @@ class LoginFragment : Fragment() {
                     is LoginState.Error -> {
                         binding.progressBarLogin.visibility = View.GONE
                         binding.btnLoginSubmit.isEnabled = true
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Thông báo")
-                            .setMessage(state.message)
-                            .setPositiveButton("Đã hiểu", null)
-                            .show()
+//                        MaterialAlertDialogBuilder(requireContext())
+//                            .setTitle("Thông báo")
+//                            .setMessage(state.message)
+//                            .setPositiveButton("Đã hiểu") { _, _ ->
+//                                // Reset state khi người dùng đã xem thông báo lỗi
+//                                viewModel.resetLoginState()
+//                            }
+//                            .show()
+
+                        showErrorDialog(
+                            title = "Thông báo",
+                            message = state.message,
+                            positiveText = "Đã hiểu",
+                            onPositive = {
+                                viewModel.resetLoginState()
+                            }
+                        )
                     }
 
                     else -> {
@@ -193,6 +210,16 @@ class LoginFragment : Fragment() {
             viewModel.rememberMeState.collect { isChecked ->
                 binding.cbRememberMe.isChecked = isChecked
             }
+        }
+    }
+
+    @SuppressLint("ServiceCast")
+    private fun hideKeyboard() {
+        val inputMethodManager =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocusedView = requireActivity().currentFocus
+        if (currentFocusedView != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocusedView.windowToken, 0)
         }
     }
 

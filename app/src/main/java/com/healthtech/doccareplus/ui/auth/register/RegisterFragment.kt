@@ -1,5 +1,6 @@
 package com.healthtech.doccareplus.ui.auth.register
 
+import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -7,6 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +17,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentRegisterBinding
 import com.healthtech.doccareplus.utils.ValidationUtils
+import com.healthtech.doccareplus.utils.showErrorDialog
+import com.healthtech.doccareplus.utils.showSuccessDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -227,6 +231,7 @@ class RegisterFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnRegisterSubmit.setOnClickListener {
+
             val name = binding.etRegisterName.text.toString()
             val email = binding.etRegisterEmail.text.toString()
             val password = binding.etRegisterPassword.text.toString()
@@ -253,32 +258,45 @@ class RegisterFragment : Fragment() {
                         binding.progressBarRegister.visibility = View.GONE
                         binding.btnRegisterSubmit.isEnabled = true
 
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Xác thực Email")
-                            .setMessage("Chúng tôi đã gửi email xác thực đến địa chỉ email của bạn. Vui lòng kiểm tra và xác thực tài khoản trước khi đăng nhập.")
-                            .setPositiveButton("Đến đăng nhập") { _, _ ->
+//                        MaterialAlertDialogBuilder(requireContext())
+//                            .setTitle("Xác thực Email")
+//                            .setMessage("Chúng tôi đã gửi email xác thực đến địa chỉ email của bạn. Vui lòng kiểm tra và xác thực tài khoản trước khi đăng nhập.")
+//                            .setPositiveButton("Đến đăng nhập") { _, _ ->
+//                                findNavController().navigate(R.id.action_register_to_login)
+//                            }
+//                            .setCancelable(false)
+//                            .show()
+                        showSuccessDialog(
+                            title = "Xác thực Email",
+                            message = "Chúng tôi đã gửi email xác thực đến địa chỉ email của bạn. Vui lòng kiểm tra và xác thực tài khoản trước khi đăng nhập.",
+                            positiveText = "Đến đăng nhập",
+                            cancelable = false,
+                            onPositive = {
                                 findNavController().navigate(R.id.action_register_to_login)
-                            }
-                            .setCancelable(false)
-                            .show()
+                            })
                     }
 
                     is RegisterState.Error -> {
                         binding.progressBarRegister.visibility = View.GONE
                         binding.btnRegisterSubmit.isEnabled = true
+                        showErrorDialog(
+                            title = "Thông báo",
+                            message = state.message,
+                            positiveText = "Đã hiểu",
+                            onPositive = {
+                                viewModel.resetRegisterState()
+                            })
 
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Thông báo")
-                            .setMessage(state.message)
-                            .setPositiveButton("Đã hiểu") { dialog, _ ->
-                                dialog.dismiss()
-
-//                                // Nếu lỗi liên quan đến email đã xác thực, chuyển về màn đăng nhập
-//                                if (state.message.contains("đã được đăng ký và xác thực")) {
-//                                    findNavController().navigate(R.id.action_register_to_login)
-//                                }
-                            }
-                            .show()
+//                        MaterialAlertDialogBuilder(requireContext()).setTitle("Thông báo")
+//                            .setMessage(state.message).setPositiveButton("Đã hiểu") { _, _ ->
+//                                viewModel.resetRegisterState()
+//                            }
+////                                // Nếu lỗi liên quan đến email đã xác thực, chuyển về màn đăng nhập
+////                                if (state.message.contains("đã được đăng ký và xác thực")) {
+////                                    findNavController().navigate(R.id.action_register_to_login)
+////                                }
+//
+//                            .show()
                     }
 
                     else -> {
@@ -287,6 +305,16 @@ class RegisterFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    private fun hideKeyboard() {
+        val inputMethodManager =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val currentFocusedView = requireActivity().currentFocus
+
+        if (currentFocusedView != null) {
+            inputMethodManager.hideSoftInputFromWindow(currentFocusedView.windowToken, 0)
         }
     }
 

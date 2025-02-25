@@ -27,6 +27,9 @@ class LoginViewModel @Inject constructor(
     }
 
     fun login(email: String, password: String, rememberMe: Boolean) {
+        if (_loginState.value is LoginState.Loading) {
+        return
+    }
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
             try {
@@ -48,5 +51,9 @@ class LoginViewModel @Inject constructor(
     fun updateRememberMe(isChecked: Boolean){
         userPreferences.saveRememberMe(isChecked)
         _rememberMeState.value = isChecked
+    }
+
+    fun resetLoginState() {
+        _loginState.value = LoginState.Idle
     }
 }

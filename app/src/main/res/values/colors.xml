@@ -28,4 +28,10 @@
     <color name="warm_brown">#5A4B35</color>
     <color name="black_transparent">#80000000</color>
 
+    <!-- Dialog Icons Colors -->
+    <color name="primary">@color/teal</color>
+    <color name="success">#27ae60</color>
+    <color name="error">#e74c3c</color>
+    <color name="warning">#f39c12</color>
+    <color name="info">#3498db</color>
 </resources>

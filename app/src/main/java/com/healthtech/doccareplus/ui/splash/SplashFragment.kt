@@ -46,7 +46,7 @@ class SplashFragment : Fragment() {
     private fun observeStartDestination() {
         viewLifecycleOwner.lifecycleScope.launch {
             // Đảm bảo Splash hiển thị ít nhất 1.5 giây để animation được mượt
-            delay(1500)
+            delay(3000)
             
             // Sau đó bắt đầu chờ kết quả từ viewModel
             viewModel.startDestination.collectLatest { destination ->
