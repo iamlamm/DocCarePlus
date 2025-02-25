@@ -7,7 +7,7 @@
     android:background="@color/white"
     tools:context=".ui.home.HomeFragment">
 
-    <com.healthtech.doccareplus.ui.slider.BannerSlider
+    <com.healthtech.doccareplus.ui.widgets.slider.BannerSlider
         android:id="@+id/banner_slider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -108,8 +108,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    tools:listitem="@layout/item_doctor"
-                    android:clipToPadding="true" />
+                    android:clipToPadding="true"
+                    tools:listitem="@layout/item_doctor" />
 
             </LinearLayout>
 

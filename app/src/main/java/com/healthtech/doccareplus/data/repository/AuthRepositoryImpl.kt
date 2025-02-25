@@ -56,25 +56,25 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun getCurrentUser(): Result<User> {
-        return try {
-            val localUser = userPreferences.getUser()
-            if (localUser != null) {
-                Result.success(localUser)
-            }
-
-            val remoteResult = authApi.fetchCurrentUser()
-            if (remoteResult.isSuccess) {
-                val remoteUser = remoteResult.getOrNull()
-                if (remoteUser != null && remoteUser != localUser) {
-                    userPreferences.saveUser(remoteUser)
-                }
-            }
-            remoteResult
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+//    override suspend fun getCurrentUser(): Result<User> {
+//        return try {
+//            val localUser = userPreferences.getUser()
+//            if (localUser != null) {
+//                Result.success(localUser)
+//            }
+//
+//            val remoteResult = authApi.fetchCurrentUser()
+//            if (remoteResult.isSuccess) {
+//                val remoteUser = remoteResult.getOrNull()
+//                if (remoteUser != null && remoteUser != localUser) {
+//                    userPreferences.saveUser(remoteUser)
+//                }
+//            }
+//            remoteResult
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }
 
     override fun logout() {
         userPreferences.clearUser()

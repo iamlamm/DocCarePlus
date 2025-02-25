@@ -3,9 +3,11 @@ package com.healthtech.doccareplus.di
 import com.healthtech.doccareplus.data.repository.AuthRepositoryImpl
 import com.healthtech.doccareplus.data.repository.CategoryRepositoryImpl
 import com.healthtech.doccareplus.data.repository.DoctorRepositoryImpl
+import com.healthtech.doccareplus.data.repository.UserRepositoryImpl
 import com.healthtech.doccareplus.domain.repository.AuthRepository
 import com.healthtech.doccareplus.domain.repository.CategoryRepository
 import com.healthtech.doccareplus.domain.repository.DoctorRepository
+import com.healthtech.doccareplus.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -224,4 +226,10 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        userRepositoryImpl: UserRepositoryImpl
+    ): UserRepository
 }

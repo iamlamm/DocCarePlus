@@ -10,7 +10,9 @@ import androidx.navigation.fragment.NavHostFragment
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.ActivityHomeBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
@@ -23,14 +25,33 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Khởi tạo navigation controller
+        setupNavController()
+        
+        // Sử dụng thread khác để khởi tạo UI không quan trọng
+        lifecycleScope.launch(Dispatchers.Default) {
+            // Đảm bảo NavController đã sẵn sàng trước khi thiết lập bottom navigation
+            withContext(Dispatchers.Main) {
+                setupBottomNavigation()
+                setupNavigation()
+            }
+            
+            // Khởi tạo các sự kiện click không quan trọng
+            withContext(Dispatchers.Main) {
+                setupClickListeners()
+            }
+            
+            // Quan sát dữ liệu người dùng (có thể làm sau)
+            withContext(Dispatchers.Main) {
+                observeCurrentUser()
+            }
+        }
+    }
+    
+    private fun setupNavController() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-
-        observeCurrentUser()
-        setupClickListeners()
-        setupNavigation()
-        setupBottomNavigation()
     }
 
     private fun observeCurrentUser() {
@@ -80,8 +101,10 @@ class HomeActivity : AppCompatActivity() {
         binding.bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
+                    // Nếu đang không ở HomeFragment, sử dụng popBackStack để quay về
                     if (navController.currentDestination?.id != R.id.homeFragment) {
-                        navController.navigate(R.id.homeFragment)
+                        // Quay về HomeFragment mà không tạo instance mới
+                        navController.popBackStack(R.id.homeFragment, false)
                     }
                     true
                 }
@@ -112,9 +135,9 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
+        // Mặc định chọn tab home
         binding.bottomNav.selectedItemId = R.id.nav_home
     }
-
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()

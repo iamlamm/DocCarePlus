@@ -153,26 +153,7 @@ class AuthApi @Inject constructor(
         auth.signOut()
     }
 
-    suspend fun fetchCurrentUser(): Result<User> {
-        return try {
-            if (!networkUtils.isNetworkAvailable()) {
-                return Result.failure(Exception("Không có kết nối internet!"))
-            }
-
-            val firebaseUser = auth.currentUser
-                ?: return Result.failure(Exception("Chưa đăng nhập"))
-
-            val userSnapshot = database.getReference("users")
-                .child(firebaseUser.uid)
-                .get()
-                .await()
-
-            val userData = userSnapshot.getValue(User::class.java)
-                ?: return Result.failure(Exception("Không tìm thấy thông tin người dùng"))
-
-            Result.success(userData)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
     }
 }

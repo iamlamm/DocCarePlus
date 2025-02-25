@@ -4,5 +4,5 @@ import com.healthtech.doccareplus.domain.model.Doctor
 import kotlinx.coroutines.flow.Flow
 
 interface DoctorRepository {
-    fun getDoctors(): Flow<List<Doctor>>
+    fun observeDoctors(): Flow<Result<List<Doctor>>>
 }

@@ -7,6 +7,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.healthtech.doccareplus.domain.model.Category
 import com.healthtech.doccareplus.domain.model.Doctor
+import com.healthtech.doccareplus.domain.model.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -51,7 +52,7 @@ class FirebaseApi @Inject constructor(
         // Khi Flow bị hủy, remove listener để tránh memory leak
         awaitClose {
             categoriesRef.removeEventListener(listener)
-            println("Flow đóng")
+            println("Flow getCategories đóng")
         }
     }
 
@@ -78,7 +79,27 @@ class FirebaseApi @Inject constructor(
         // Khi Flow bị hủy, remove listener để tránh memory leak
         awaitClose {
             doctorsRef.removeEventListener(listener)
-            println("Flow đóng")
+            println("Flow getDoctors đóng")
+        }
+    }
+
+    fun observeUser(userId: String): Flow<Result<User>> = callbackFlow {
+        val userRef = database.getReference("users").child(userId)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val user = snapshot.getValue(User::class.java)
+                if (user != null) trySend(Result.success(user))
+                else trySend(Result.failure(Exception("User not found")))
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Result.failure(error.toException()))
+            }
+        }
+        userRef.addValueEventListener(listener)
+        awaitClose {
+            userRef.removeEventListener(listener)
+            println("Flow getUserById đóng")
         }
     }
 }

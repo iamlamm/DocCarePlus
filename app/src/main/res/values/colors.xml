@@ -26,5 +26,6 @@
     <color name="pale_gray">#F2F2F2</color>
     <color name="gray">#757575</color>
     <color name="warm_brown">#5A4B35</color>
+    <color name="black_transparent">#80000000</color>
 
 </resources>

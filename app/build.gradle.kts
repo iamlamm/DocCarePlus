@@ -89,6 +89,9 @@ android {
 }
 
 dependencies {
+    // lottie
+    implementation (libs.lottie)
+
     implementation(libs.androidx.viewpager2)
     implementation(libs.material.v1110)
     implementation(libs.circleindicator)
