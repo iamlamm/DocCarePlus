@@ -15,6 +15,6 @@
     <item
         android:width="20dp"
         android:height="20dp"
-        android:drawable="@drawable/back3"
+        android:drawable="@drawable/search_icon"
         android:gravity="center" />
 </layer-list>

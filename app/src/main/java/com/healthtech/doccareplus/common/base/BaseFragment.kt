@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.healthtech.doccareplus.common.state.UiState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 
@@ -57,6 +58,20 @@ abstract class BaseFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(lifecycleState) {
                 collect { collector(it) }
+            }
+        }
+    }
+
+    /**
+     * Helper method để collectLatest Flow với lifecycle awareness
+     */
+    protected fun <T> Flow<T>.collectLatestWithLifecycle(
+        lifecycleState: Lifecycle.State = Lifecycle.State.STARTED,
+        collector: (T) -> Unit
+    ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(lifecycleState) {
+                collectLatest { collector(it) }
             }
         }
     }
