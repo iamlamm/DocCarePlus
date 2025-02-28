@@ -47,6 +47,9 @@ class AllDoctorsViewModel @Inject constructor(
     // Lưu trữ danh sách gốc
     private var originalDoctors = listOf<Doctor>()
 
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive = _isSearchActive.asStateFlow()
+
     init {
         // Lấy categoryId và categoryName từ navigation arguments
         savedStateHandle.get<Int>("categoryId")?.let { catId ->
@@ -66,9 +69,11 @@ class AllDoctorsViewModel @Inject constructor(
         viewModelScope.launch {
             doctors.collect { state ->
                 if (state is UiState.Success) {
-                    originalDoctors = state.data
-                    // Cập nhật kết quả tìm kiếm nếu đang có query
-                    if (_searchQuery.value.isNotEmpty()) {
+                    if (!_isSearchActive.value) {
+                        _searchResults.value = state.data
+                        originalDoctors = state.data
+                    } else {
+                        originalDoctors = state.data
                         filterDoctors(_searchQuery.value)
                     }
                 }
@@ -90,17 +95,21 @@ class AllDoctorsViewModel @Inject constructor(
         }
 
         val filteredList = originalDoctors.filter {
-            it.name.contains(query, ignoreCase = true) || 
-            it.specialty.contains(query, ignoreCase = true)
+            it.name.contains(query, ignoreCase = true) ||
+                    it.specialty.contains(query, ignoreCase = true)
         }
-        
+
         _searchResults.value = filteredList
     }
 
     // Hàm xóa query tìm kiếm
     fun clearSearch() {
         _searchQuery.value = ""
-        _searchResults.value = originalDoctors
+        doctors.value.let { state ->
+            if (state is UiState.Success) {
+                _searchResults.value = state.data
+            }
+        }
     }
 
     private fun loadInitialData() {
@@ -171,5 +180,12 @@ class AllDoctorsViewModel @Inject constructor(
     // Hàm này gọi khi người dùng chủ động refresh (pull-to-refresh)
     fun refreshDoctors() {
         refreshDoctorsByCategory()
+    }
+
+    fun setSearchActive(active: Boolean) {
+        _isSearchActive.value = active
+        if (!active) {
+            clearSearch()
+        }
     }
 }

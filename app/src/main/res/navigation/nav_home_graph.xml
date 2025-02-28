@@ -59,6 +59,13 @@
             app:argType="string"
             android:defaultValue="@null"
             app:nullable="true" />
+        <action
+            android:id="@+id/action_allDoctors_to_doctorProfile"
+            app:destination="@id/doctorProfileFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/moreFragment"
@@ -104,5 +111,15 @@
         android:name="com.healthtech.doccareplus.ui.profile.ProfileFragment"
         android:label="fragment_profile"
         tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/doctorProfileFragment"
+        android:name="com.healthtech.doccareplus.ui.doctor.profile.DoctorProfileFragment"
+        android:label="DoctorProfileFragment"
+        tools:layout="@layout/fragment_doctor_profile">
+        <argument
+            android:name="doctor"
+            app:argType="com.healthtech.doccareplus.domain.model.Doctor" />
+    </fragment>
 
 </navigation>

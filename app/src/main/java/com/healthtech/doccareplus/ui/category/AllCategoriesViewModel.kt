@@ -23,36 +23,39 @@ class AllCategoriesViewModel @Inject constructor(
     // Chỉ để theo dõi trạng thái đã tải xong chưa
     private val _isInitialDataLoaded = MutableStateFlow(false)
     val isInitialDataLoaded = _isInitialDataLoaded.asStateFlow()
-    
+
     // Theo dõi thời gian cập nhật cuối
     private var lastRefreshTime = 0L
-    
+
     // Thêm biến cho tìm kiếm
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
-    
+
     // Danh sách kết quả tìm kiếm
     private val _searchResults = MutableStateFlow<List<Category>>(emptyList())
     val searchResults = _searchResults.asStateFlow()
-    
+
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive = _isSearchActive.asStateFlow()
+
     // Lưu trữ danh sách gốc
     private var originalCategories = listOf<Category>()
 
     init {
-        // Bắt đầu load dữ liệu ngay khi khởi tạo
         viewModelScope.launch {
-            // Sử dụng observeCategories sẽ tự động emit local data trước, sau đó remote
-            // Điều này phù hợp với mô hình của CategoryRepositoryImpl
+            // Load data ban đầu
             observeCategories(categoryRepository)
             _isInitialDataLoaded.value = true
-            
-            // Quan sát categories để cập nhật original list
+
+            // Quan sát categories để cập nhật state
             categories.collect { state ->
                 if (state is UiState.Success) {
-                    originalCategories = state.data
-                    // Cập nhật kết quả tìm kiếm nếu đang có query
-                    if (_searchQuery.value.isNotEmpty()) {
-                        filterCategories(_searchQuery.value)
+                    originalCategories = state.data  // Luôn cập nhật originalCategories trước
+                    
+                    if (!_isSearchActive.value) {
+                        _searchResults.value = originalCategories
+                    } else {
+                        filterCategories(_searchQuery.value)  // Nếu đang search thì filter lại
                     }
                 }
             }
@@ -64,25 +67,35 @@ class AllCategoriesViewModel @Inject constructor(
         _searchQuery.value = query
         filterCategories(query)
     }
-    
+
     // Hàm lọc danh sách
     private fun filterCategories(query: String) {
         if (query.isEmpty()) {
             _searchResults.value = originalCategories
             return
         }
-        
+
         val filteredList = originalCategories.filter {
             it.name.contains(query, ignoreCase = true)
         }
-        
+
         _searchResults.value = filteredList
     }
-    
-    // Hàm xóa query tìm kiếm
+
+    fun setSearchActive(active: Boolean) {
+        _isSearchActive.value = active
+        if (!active) {
+            clearSearch()
+        }
+    }
+
     fun clearSearch() {
         _searchQuery.value = ""
-        _searchResults.value = originalCategories
+        categories.value.let { state ->
+            if (state is UiState.Success) {
+                _searchResults.value = state.data
+            }
+        }
     }
 
     // Hàm này kiểm tra và refresh chỉ khi cần thiết
@@ -93,12 +106,23 @@ class AllCategoriesViewModel @Inject constructor(
             refreshCategories()
         }
     }
-    
+
     // Hàm này gọi khi người dùng chủ động muốn refresh
     fun refreshCategories() {
         viewModelScope.launch(Dispatchers.IO) {
             lastRefreshTime = System.currentTimeMillis()
             refreshCategories(categoryRepository)
+        }
+    }
+
+    // Thêm method để restore state
+    fun restoreState() {
+        if (originalCategories.isNotEmpty()) {
+            if (!_isSearchActive.value) {
+                _searchResults.value = originalCategories
+            } else {
+                filterCategories(_searchQuery.value)
+            }
         }
     }
 }

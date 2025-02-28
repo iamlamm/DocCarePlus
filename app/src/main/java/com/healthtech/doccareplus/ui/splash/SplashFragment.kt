@@ -1,5 +1,6 @@
 package com.healthtech.doccareplus.ui.splash
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,11 +9,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentSplashBinding
 import com.healthtech.doccareplus.ui.home.HomeActivity
+import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -41,7 +42,7 @@ class SplashFragment : Fragment() {
 
     private fun observeStartDestination() {
         viewLifecycleOwner.lifecycleScope.launch {
-            val delayJob = launch { delay(3000) } // Giảm xuống 1.5s thay vì 3s
+            val delayJob = launch { delay(3000) }
             delayJob.join()
             viewModel.startDestination.collectLatest { destination ->
                 if (destination != 0) {
@@ -49,21 +50,30 @@ class SplashFragment : Fragment() {
 
                     when (destination) {
                         R.id.loginFragment -> {
-                            findNavController().navigate(
+                            findNavController().safeNavigate(
                                 R.id.action_splash_to_login
                             )
                         }
 
                         R.id.homeFragment -> {
-                            // Sử dụng Intent với FLAG_ACTIVITY_NO_ANIMATION
-                            val intent = Intent(requireContext(), HomeActivity::class.java)
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-                            startActivity(intent)
+//                            // Sử dụng Intent với FLAG_ACTIVITY_NO_ANIMATION
+//                            val intent = Intent(requireContext(), HomeActivity::class.java)
+//                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+//                            startActivity(intent)
+//
+//                            // Sử dụng overridePendingTransition để tránh hiệu ứng giật
+//                            requireActivity().overridePendingTransition(
+//                                R.anim.fade_in, R.anim.fade_out
+//                            )
+//                            requireActivity().finish()
 
-                            // Sử dụng overridePendingTransition để tránh hiệu ứng giật
-                            requireActivity().overridePendingTransition(
-                                R.anim.fade_in, R.anim.fade_out
+                            val options = ActivityOptions.makeCustomAnimation(
+                                requireContext(),
+                                R.anim.ultra_smooth_fade_in,
+                                R.anim.ultra_smooth_fade_out
                             )
+                            val intent = Intent(requireContext(), HomeActivity::class.java)
+                            startActivity(intent, options.toBundle())
                             requireActivity().finish()
                         }
                     }

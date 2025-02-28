@@ -30,8 +30,6 @@ class AllCategoriesFragment : BaseFragment() {
     private val viewModel: AllCategoriesViewModel by viewModels()
     private lateinit var allCategoriesAdapter: AllCategoriesAdapter
 
-    // Để theo dõi xem đã setup observers chưa để tránh setup lại
-    private var hasSetupObservers = false
     private var isFirstLoad = true
 
     override fun onCreateView(
@@ -47,29 +45,41 @@ class AllCategoriesFragment : BaseFragment() {
         // Hiển thị loading indicator ngay lập tức
 //        binding.progressBarAllCategories.visibility = View.VISIBLE
 
-        // Initialization in order of priority
         setupToolbar()
         setupAdapter()
         setupRecyclerView()
         setupSearchView()
         setupBackPressHandling()
-
-        // Kiểm tra trạng thái đã load dữ liệu chưa
-        if (!hasSetupObservers) {
-            observeCategories()
-            observeSearchResults()
-            hasSetupObservers = true
-        }
+        observeCategories()
+        observeSearchResults()
     }
 
     private fun setupBackPressHandling() {
+//        requireActivity().onBackPressedDispatcher.addCallback(
+//            viewLifecycleOwner,
+//            object : OnBackPressedCallback(true) {
+//                override fun handleOnBackPressed() {
+//                    if (binding.searchView.visibility == View.VISIBLE) {
+//                        toggleSearchView()
+//                    } else {
+//                        isEnabled = false
+//                        requireActivity().onBackPressedDispatcher.onBackPressed()
+//                    }
+//                }
+//            })
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     if (binding.searchView.visibility == View.VISIBLE) {
-                        toggleSearchView()
+                        binding.searchView.setQuery("", false)
+                        hideKeyboard()
+                        binding.searchView.clearFocus()
+                        binding.searchView.visibility = View.GONE
+                        viewModel.setSearchActive(false)
+                        binding.toolbar.title = "Find Your Category"
                     } else {
+                        // Cho phép hành vi back mặc định
                         isEnabled = false
                         requireActivity().onBackPressedDispatcher.onBackPressed()
                     }
@@ -77,10 +87,12 @@ class AllCategoriesFragment : BaseFragment() {
             })
     }
 
+
     private fun setupToolbar() {
         binding.toolbar.apply {
             setNavigationOnClickListener {
-                requireActivity().onBackPressedDispatcher.onBackPressed()
+//                requireActivity().onBackPressedDispatcher.onBackPressed()
+                closeSearchAndNavigateBack()
             }
             title = "Find Your Category"
 
@@ -101,12 +113,6 @@ class AllCategoriesFragment : BaseFragment() {
     private fun setupAdapter() {
         allCategoriesAdapter = AllCategoriesAdapter().apply {
             setOnCategoryClickListener { category ->
-//                // Xử lý click
-//                Snackbar.make(
-//                    binding.root,
-//                    "Selected category: ${category.name}",
-//                    Snackbar.LENGTH_SHORT
-//                ).show()
                 val action = AllCategoriesFragmentDirections.actionAllCategoriesToAllDoctors(
                     categoryId = category.id, categoryName = category.name
                 )
@@ -119,16 +125,13 @@ class AllCategoriesFragment : BaseFragment() {
         binding.rcvAllCategories.apply {
             adapter = allCategoriesAdapter
             layoutManager = GridLayoutManager(requireContext(), 3)
-            // Tắt animation để tăng hiệu suất
             itemAnimator = null
-            // Tối ưu performance
             setHasFixedSize(true)
         }
     }
 
     private fun setupSearchView() {
         binding.searchView.apply {
-            // Đặt queryHint
             queryHint = "Search categories..."
 
             // Xử lý sự kiện thay đổi text
@@ -153,49 +156,6 @@ class AllCategoriesFragment : BaseFragment() {
     }
 
     private fun observeCategories() {
-//         viewLifecycleOwner.lifecycleScope.launch {
-//             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                 // Quan sát dữ liệu categories
-//                 viewModel.categories.collectLatest { state ->
-//                     when (state) {
-//                         is UiState.Success -> {
-//                             val categories = state.data
-//                             // Lazy loading để tăng tốc độ hiển thị ban đầu
-//                             if (isFirstLoad && categories.size > 10) {
-//                                 // Hiển thị 10 item đầu tiên trước
-//                                 allCategoriesAdapter.setCategories(categories.take(10))
-
-//                                 // Sau đó mới hiển thị đầy đủ - trong coroutine scope
-//                                 launch {
-//                                     delay(150)
-//                                     allCategoriesAdapter.setCategories(categories)
-//                                     isFirstLoad = false
-//                                 }
-//                             } else {
-//                                 allCategoriesAdapter.setCategories(categories)
-//                                 if (isFirstLoad) isFirstLoad = false
-//                             }
-//                         }
-//                         is UiState.Error -> {
-//                             // Hiển thị thông báo lỗi
-//                             Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG)
-//                                 .setAction("Retry") {
-//                                     viewModel.refreshCategories()
-//                                 }
-//                                 .show()
-//                         }
-//                         else -> {
-//                             // Xử lý các trạng thái khác
-//                         }
-//                     }
-//                 }
-
-//                 // Quan sát trạng thái đã tải xong chưa
-//                 viewModel.isInitialDataLoaded.collect { isLoaded ->
-// //                    binding.progressBarAllCategories.visibility = if (isLoaded) View.GONE else View.VISIBLE
-//                 }
-//             }
-//         }
         viewModel.categories.collectLatestWithLifecycle { state ->
             when (state) {
                 is UiState.Success -> {
@@ -248,12 +208,13 @@ class AllCategoriesFragment : BaseFragment() {
         binding.searchView.apply {
             if (visibility == View.VISIBLE) {
                 visibility = View.GONE
-                viewModel.clearSearch() // Xóa kết quả tìm kiếm
+                viewModel.setSearchActive(false)
                 binding.toolbar.title = "Find Your Category"
             } else {
                 visibility = View.VISIBLE
+                viewModel.setSearchActive(true)
                 binding.toolbar.title = ""
-                requestFocus() // Hiển thị bàn phím
+                requestFocus()
             }
         }
     }
@@ -265,15 +226,51 @@ class AllCategoriesFragment : BaseFragment() {
         inputMethodManager.hideSoftInputFromWindow(binding.searchView.windowToken, 0)
     }
 
+    private fun closeSearchAndNavigateBack() {
+        if (binding.searchView.visibility == View.VISIBLE) {
+//            binding.searchView.setQuery("", false)
+//            hideKeyboard()
+//            binding.searchView.clearFocus()
+            binding.searchView.visibility = View.GONE
+//            viewModel.setSearchActive(false)
+        }
+//        requireActivity().onBackPressedDispatcher.onBackPressed()
+        findNavController().navigateUp()
+
+    }
+
     // Thay đổi onResume để tránh refresh ngay lập tức
     override fun onResume() {
         super.onResume()
 
-        // Chỉ refresh sau khi đã hoàn tất animation chuyển màn hình
-        if (!isFirstLoad) {
+        // Khôi phục trạng thái SearchView dựa trên isSearchActive từ ViewModel
+        viewModel.isSearchActive.value.let { isActive ->
+            if (isActive) {
+                if (binding.searchView.visibility != View.VISIBLE) {
+                    binding.searchView.visibility = View.VISIBLE
+                    binding.toolbar.title = ""
+                }
+            } else {
+                binding.searchView.visibility = View.GONE
+                binding.toolbar.title = "Find Your Category"
+            }
+        }
+
+        if (::allCategoriesAdapter.isInitialized &&
+            allCategoriesAdapter.itemCount == 0 &&
+            binding.rcvAllCategories != null
+        ) {
+
+            // Làm mới dữ liệu khi quay lại fragment
+            viewModel.refreshCategories()
+
+            // Delay nhỏ để animation hoàn tất trước khi hiển thị dữ liệu
             viewLifecycleOwner.lifecycleScope.launch {
-                delay(300) // Đợi animation chuyển màn hình hoàn tất
-                viewModel.checkAndRefreshIfNeeded()
+                delay(100)
+                // Hiển thị RecyclerView nếu nó đang bị ẩn
+                if (binding.rcvAllCategories.visibility != View.VISIBLE) {
+                    binding.rcvAllCategories.visibility = View.VISIBLE
+                }
             }
         }
     }
@@ -281,6 +278,8 @@ class AllCategoriesFragment : BaseFragment() {
     override fun cleanupViewReferences() {
         if (_binding != null) {
             binding.rcvAllCategories.adapter = null
+            binding.searchView.setQuery("", false)
+            binding.searchView.clearFocus()
             _binding = null
         }
         super.cleanupViewReferences()

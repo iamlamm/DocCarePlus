@@ -25,12 +25,12 @@ class AllDoctorsAdapter : RecyclerView.Adapter<AllDoctorsAdapter.AllDoctorsViewH
         doctors = newDoctors
         diffResult.dispatchUpdatesTo(this)
     }
-    
+
     // Thêm click listener cho card bác sĩ
     fun setOnDoctorClickListener(listener: (Doctor) -> Unit) {
         onDoctorClickListener = listener
     }
-    
+
     // Thêm click listener cho nút Book Now
     fun setOnBookClickListener(listener: (Doctor) -> Unit) {
         onBookClickListener = listener
@@ -38,7 +38,7 @@ class AllDoctorsAdapter : RecyclerView.Adapter<AllDoctorsAdapter.AllDoctorsViewH
 
     inner class AllDoctorsViewHolder(private val binding: ItemDoctorBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        
+
         @SuppressLint("SetTextI18n")
         fun bind(doctor: Doctor) {
             binding.apply {

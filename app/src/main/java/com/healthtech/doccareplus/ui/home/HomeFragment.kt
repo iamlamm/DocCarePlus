@@ -19,6 +19,7 @@ import com.healthtech.doccareplus.common.state.UiState
 import com.healthtech.doccareplus.databinding.FragmentHomeBinding
 import com.healthtech.doccareplus.ui.home.adapter.CategoryAdapter
 import com.healthtech.doccareplus.ui.home.adapter.DoctorAdapter
+import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -30,7 +31,7 @@ class HomeFragment : BaseFragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by viewModels()
+    val viewModel: HomeViewModel by viewModels()
 
     // Khởi tạo adapter một lần trong vòng đời Fragment
     private val categoryAdapter by lazy { CategoryAdapter() }
@@ -59,20 +60,20 @@ class HomeFragment : BaseFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Kiểm tra visibility trước khi setup
-        if (binding.bannerSlider.visibility != View.VISIBLE) {
-            binding.bannerSlider.visibility = View.VISIBLE
-        }
-        
+        // // Kiểm tra visibility trước khi setup
+        // if (binding.bannerSlider.visibility != View.VISIBLE) {
+        //     binding.bannerSlider.visibility = View.VISIBLE
+        // }
+
         // Ưu tiên thiết lập UI trước
         setupRecyclerView()
-        
+
         // Tách việc thiết lập UI thành các giai đoạn để tránh ANR
         viewLifecycleOwner.lifecycleScope.launch {
             // Ưu tiên thiết lập banner và click listeners
             setupBannerSlider()
             setupClickListeners()
-            
+
             // Chỉ thiết lập observers một lần trong lifecycle của Fragment
             if (!hasSetupObservers) {
                 Log.d("HomeFragment", "Setting up data observers for the first time")
@@ -95,21 +96,21 @@ class HomeFragment : BaseFragment() {
             tvSeeAllCategory.setOnClickListener {
                 // Preload trước khi chuyển màn hình
                 viewModel.preloadCategoriesScreen()
-                
+
                 // Delay nhỏ (không cần thiết nếu bạn đã cài đặt transition animations)
                 viewLifecycleOwner.lifecycleScope.launch {
                     delay(50) // Delay rất nhỏ, đủ để kích hoạt preload
-                    findNavController().navigate(R.id.action_home_to_allCategories)
+                    findNavController().safeNavigate(R.id.action_home_to_allCategories)
                 }
             }
 
             tvSeeAllDoctor.setOnClickListener {
                 // Tương tự, preload cho Doctors
                 viewModel.preloadDoctorsScreen()
-                
+
                 viewLifecycleOwner.lifecycleScope.launch {
                     delay(50)
-                    findNavController().navigate(R.id.action_home_to_allDoctors)
+                    findNavController().safeNavigate(R.id.action_home_to_allDoctors)
                 }
             }
         }
@@ -117,12 +118,15 @@ class HomeFragment : BaseFragment() {
 
     private fun setupRecyclerView() {
         binding.rcvCategories.apply {
+            setHasFixedSize(true)
+            setItemViewCacheSize(8)
             adapter = categoryAdapter
             layoutManager =
                 LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         }
 
         binding.rcvPopularDoctors.apply {
+            setItemViewCacheSize(4)
             adapter = doctorAdapter
             layoutManager =
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)

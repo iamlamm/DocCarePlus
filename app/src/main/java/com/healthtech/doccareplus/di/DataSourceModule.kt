@@ -2,12 +2,16 @@ package com.healthtech.doccareplus.di
 
 import com.healthtech.doccareplus.data.local.datasource.impl.CategoryLocalDataSourceImpl
 import com.healthtech.doccareplus.data.local.datasource.impl.DoctorLocalDataSourceImpl
+import com.healthtech.doccareplus.data.local.datasource.impl.TimeSlotLocalDataSourceImpl
 import com.healthtech.doccareplus.data.local.datasource.interfaces.CategoryLocalDataSource
 import com.healthtech.doccareplus.data.local.datasource.interfaces.DoctorLocalDataSource
+import com.healthtech.doccareplus.data.local.datasource.interfaces.TimeSlotLocalDataSource
 import com.healthtech.doccareplus.data.remote.datasource.impl.CategoryRemoteDataSourceImpl
 import com.healthtech.doccareplus.data.remote.datasource.impl.DoctorRemoteDataSourceImpl
+import com.healthtech.doccareplus.data.remote.datasource.impl.TimeSlotRemoteDataSourceImpl
 import com.healthtech.doccareplus.data.remote.datasource.interfaces.CategoryRemoteDataSource
 import com.healthtech.doccareplus.data.remote.datasource.interfaces.DoctorRemoteDataSource
+import com.healthtech.doccareplus.data.remote.datasource.interfaces.TimeSlotRemoteDataSource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -40,4 +44,16 @@ abstract class DataSourceModule {
     abstract fun bindDoctorRemoteDataSource(
         impl: DoctorRemoteDataSourceImpl
     ): DoctorRemoteDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindTimeSlotLocalDataSource(
+        impl: TimeSlotLocalDataSourceImpl
+    ): TimeSlotLocalDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindTimeSlotRemoteDataSource(
+        impl: TimeSlotRemoteDataSourceImpl
+    ): TimeSlotRemoteDataSource
 }

@@ -9,9 +9,8 @@ import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.healthtech.doccareplus.R
@@ -19,9 +18,9 @@ import com.healthtech.doccareplus.common.base.BaseFragment
 import com.healthtech.doccareplus.common.state.UiState
 import com.healthtech.doccareplus.databinding.FragmentAllDoctorsBinding
 import com.healthtech.doccareplus.ui.doctor.adapter.AllDoctorsAdapter
+import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -89,12 +88,13 @@ class AllDoctorsFragment : BaseFragment() {
         binding.searchView.apply {
             if (visibility == View.VISIBLE) {
                 visibility = View.GONE
-                viewModel.clearSearch() // Xóa kết quả tìm kiếm
+                viewModel.setSearchActive(false)
                 binding.toolbar.title = viewModel.categoryName.value ?: "Find Your Doctor"
             } else {
                 visibility = View.VISIBLE
+                viewModel.setSearchActive(true)
                 binding.toolbar.title = ""
-                requestFocus() // Hiển thị bàn phím
+                requestFocus()
             }
         }
     }
@@ -113,7 +113,6 @@ class AllDoctorsFragment : BaseFragment() {
                     return true
                 }
             })
-            // Xử lý nút close
             setOnCloseListener {
                 toggleSearchView()
                 true
@@ -124,7 +123,7 @@ class AllDoctorsFragment : BaseFragment() {
     private fun setupToolbar() {
         binding.toolbar.apply {
             setNavigationOnClickListener {
-                requireActivity().onBackPressedDispatcher.onBackPressed()
+                closeSearchAndNavigateBack()
             }
             title = "Find Your Doctor"
             setOnMenuItemClickListener { menuItem ->
@@ -143,12 +142,8 @@ class AllDoctorsFragment : BaseFragment() {
     private fun setupAdapter() {
         allDoctorsAdapter = AllDoctorsAdapter().apply {
             setOnDoctorClickListener { doctor ->
-                // TODO: Navigate to doctor detail
-                Snackbar.make(
-                    binding.root,
-                    "Selected doctor: ${doctor.name}",
-                    Snackbar.LENGTH_SHORT
-                ).show()
+                val action = AllDoctorsFragmentDirections.actionAllDoctorsToDoctorProfile(doctor)
+                findNavController().navigate(action)
             }
 
             setOnBookClickListener { doctor ->
@@ -167,63 +162,10 @@ class AllDoctorsFragment : BaseFragment() {
             adapter = allDoctorsAdapter
             layoutManager =
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-            // Tắt animation để tăng hiệu suất
             itemAnimator = null
-            // Tối ưu performance
             setHasFixedSize(true)
         }
     }
-
-//    private fun observeDoctors() {
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                // Quan sát dữ liệu doctors
-//                viewModel.doctors.collectLatest { state ->
-//                    when (state) {
-//                        is UiState.Success -> {
-//                            val doctors = state.data
-//                            // Lazy loading để tăng tốc độ hiển thị ban đầu
-//                            if (isFirstLoad && doctors.size > 8) {
-//                                // Hiển thị 8 bác sĩ đầu tiên trước (đủ để điền màn hình)
-//                                allDoctorsAdapter.setDoctors(doctors.take(8))
-//
-//                                // Sau đó mới hiển thị đầy đủ - trong coroutine scope
-//                                launch {
-//                                    delay(150)
-//                                    allDoctorsAdapter.setDoctors(doctors)
-//                                    isFirstLoad = false
-//                                }
-//                            } else {
-//                                allDoctorsAdapter.setDoctors(doctors)
-//                                if (isFirstLoad) isFirstLoad = false
-//                            }
-//                        }
-//
-//                        is UiState.Error -> {
-//                            // Hiển thị thông báo lỗi
-//                            Snackbar.make(binding.root, state.message, Snackbar.LENGTH_LONG)
-//                                .setAction("Retry") {
-//                                    viewModel.refreshDoctors()
-//                                }
-//                                .show()
-//                        }
-//
-//                        else -> {
-//                            // Xử lý các trạng thái khác
-//                        }
-//                    }
-//                }
-//
-//                // Quan sát trạng thái đã tải xong chưa
-//                viewModel.isInitialDataLoaded.collect { isLoaded ->
-//                    // Có thể cập nhật UI dựa trên trạng thái isLoaded
-//                    // binding.progressBarAllDoctors.visibility = if (isLoaded) View.GONE else View.VISIBLE
-//                }
-//            }
-//        }
-//    }
-
-    // ... existing code ...
 
     private fun observeDoctors() {
         viewModel.doctors.collectLatestWithLifecycle { state ->
@@ -231,11 +173,8 @@ class AllDoctorsFragment : BaseFragment() {
                 is UiState.Success -> {
                     val doctors = state.data
                     // Lazy loading để tăng tốc độ hiển thị ban đầu
-                    if (isFirstLoad && doctors.size > 8) {
-                        // Hiển thị 8 bác sĩ đầu tiên trước (đủ để điền màn hình)
-                        allDoctorsAdapter.setDoctors(doctors.take(8))
-
-                        // Sau đó mới hiển thị đầy đủ - trong coroutine scope
+                    if (isFirstLoad && doctors.size > 3) {
+                        allDoctorsAdapter.setDoctors(doctors.take(3))
                         viewLifecycleOwner.lifecycleScope.launch {
                             delay(150)
                             allDoctorsAdapter.setDoctors(doctors)
@@ -278,16 +217,6 @@ class AllDoctorsFragment : BaseFragment() {
 
     // Thêm hàm để observe thông tin category
     private fun observeCategoryInfo() {
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            viewModel.categoryName.collect { categoryName ->
-//                if (!categoryName.isNullOrEmpty()) {
-//                    // Cập nhật title nếu có category name
-//                    if (binding.searchView.visibility != View.VISIBLE) {
-//                        binding.toolbar.title = categoryName
-//                    }
-//                }
-//            }
-//        }
         viewModel.categoryName.collectWithLifecycle { categoryName ->
             if (!categoryName.isNullOrEmpty()) {
                 if (binding.searchView.visibility != View.VISIBLE) {
@@ -297,11 +226,8 @@ class AllDoctorsFragment : BaseFragment() {
         }
     }
 
-    // Thay đổi onResume để tránh refresh ngay lập tức
     override fun onResume() {
         super.onResume()
-
-        // Chỉ refresh sau khi đã hoàn tất animation chuyển màn hình
         if (!isFirstLoad) {
             viewLifecycleOwner.lifecycleScope.launch {
                 delay(300) // Đợi animation chuyển màn hình hoàn tất
@@ -316,9 +242,24 @@ class AllDoctorsFragment : BaseFragment() {
         inputMethodManager.hideSoftInputFromWindow(binding.searchView.windowToken, 0)
     }
 
+    private fun closeSearchAndNavigateBack() {
+        if (binding.searchView.visibility == View.VISIBLE) {
+//            binding.searchView.setQuery("", false)
+//            hideKeyboard()
+//            binding.searchView.clearFocus()
+            binding.searchView.visibility = View.GONE
+//            viewModel.setSearchActive(false)
+        }
+        findNavController().navigateUp()
+
+    }
+
     override fun cleanupViewReferences() {
         if (_binding != null) {
             binding.rcvAllDoctors.adapter = null
+            binding.searchView.setQuery("", false)
+            binding.searchView.clearFocus()
+            viewModel.setSearchActive(false)
             _binding = null
         }
         super.cleanupViewReferences()

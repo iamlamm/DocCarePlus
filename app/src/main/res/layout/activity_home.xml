@@ -7,10 +7,13 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!--    app:layout_scrollFlags="scroll|enterAlways|snap": ẩn toolbar khi scroll-->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
         <!-- Top Bar -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/top_bar"
@@ -75,23 +78,20 @@
                 tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
-        <!-- Fragment Container -->
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/nav_host_fragment"
-            android:name="androidx.navigation.fragment.NavHostFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            app:defaultNavHost="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_bar"
-            app:navGraph="@navigation/nav_home_graph" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- Fragment Container -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:defaultNavHost="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:navGraph="@navigation/nav_home_graph" />
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation - bật tính năng hideOnScroll -->
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
@@ -100,7 +100,7 @@
         app:fabCradleMargin="8dp"
         app:fabCradleRoundedCornerRadius="32dp"
         app:fabCradleVerticalOffset="6dp"
-        app:hideOnScroll="false">
+        app:hideOnScroll="true">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_nav"
@@ -116,10 +116,11 @@
 
     </com.google.android.material.bottomappbar.BottomAppBar>
 
-    <!-- FAB -->
+    <!-- FAB không cần thay đổi -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_calendar"
         android:layout_width="wrap_content"
+        app:layout_behavior="com.healthtech.doccareplus.ui.widgets.behavior.BottomAppBarFABBehavior"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/steel_teal"
         android:contentDescription="@string/cd_calendar_fab"
@@ -127,5 +128,6 @@
         app:layout_anchor="@id/bottom_app_bar"
         app:maxImageSize="24dp"
         app:tint="@color/white" />
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

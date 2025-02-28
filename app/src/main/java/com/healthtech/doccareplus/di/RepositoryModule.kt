@@ -3,10 +3,12 @@ package com.healthtech.doccareplus.di
 import com.healthtech.doccareplus.data.repository.AuthRepositoryImpl
 import com.healthtech.doccareplus.data.repository.CategoryRepositoryImpl
 import com.healthtech.doccareplus.data.repository.DoctorRepositoryImpl
+import com.healthtech.doccareplus.data.repository.TimeSlotRepositoryImpl
 import com.healthtech.doccareplus.data.repository.UserRepositoryImpl
 import com.healthtech.doccareplus.domain.repository.AuthRepository
 import com.healthtech.doccareplus.domain.repository.CategoryRepository
 import com.healthtech.doccareplus.domain.repository.DoctorRepository
+import com.healthtech.doccareplus.domain.repository.TimeSlotRepository
 import com.healthtech.doccareplus.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -232,4 +234,10 @@ abstract class RepositoryModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTimeSlotReposiory(
+        timeSlotReposiory: TimeSlotRepositoryImpl
+    ): TimeSlotRepository
 }

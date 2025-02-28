@@ -1,5 +1,9 @@
 package com.healthtech.doccareplus.domain.model
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Doctor(
     val id: Int = 0,
     val code: String = "",
@@ -12,4 +16,4 @@ data class Doctor(
     val image: String = "",
     val available: Boolean = true,
     val biography: String = ""
-)
+) : Parcelable

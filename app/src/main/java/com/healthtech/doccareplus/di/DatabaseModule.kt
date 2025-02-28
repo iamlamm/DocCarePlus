@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.healthtech.doccareplus.data.local.AppDataBase
 import com.healthtech.doccareplus.data.local.dao.CategoryDao
 import com.healthtech.doccareplus.data.local.dao.DoctorDao
+import com.healthtech.doccareplus.data.local.dao.TimeSlotDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,5 +35,11 @@ object DatabaseModule {
     @Singleton
     fun provideDoctorDao(database: AppDataBase): DoctorDao {
         return database.doctorDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTimeSlotDao(database: AppDataBase): TimeSlotDao {
+        return database.timeSlotDao()
     }
 }

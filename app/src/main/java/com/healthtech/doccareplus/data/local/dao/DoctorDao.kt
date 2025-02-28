@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.healthtech.doccareplus.data.local.entity.DoctorEntity
-import com.healthtech.doccareplus.domain.model.Doctor
 import kotlinx.coroutines.flow.Flow
 
 @Dao

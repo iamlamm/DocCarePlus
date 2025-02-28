@@ -27,7 +27,7 @@ class HomeActivity : AppCompatActivity() {
 
         // Khởi tạo navigation controller
         setupNavController()
-        
+
         // Sử dụng thread khác để khởi tạo UI không quan trọng
         lifecycleScope.launch(Dispatchers.Default) {
             // Đảm bảo NavController đã sẵn sàng trước khi thiết lập bottom navigation
@@ -35,19 +35,19 @@ class HomeActivity : AppCompatActivity() {
                 setupBottomNavigation()
                 setupNavigation()
             }
-            
+
             // Khởi tạo các sự kiện click không quan trọng
             withContext(Dispatchers.Main) {
                 setupClickListeners()
             }
-            
+
             // Quan sát dữ liệu người dùng (có thể làm sau)
             withContext(Dispatchers.Main) {
                 observeCurrentUser()
             }
         }
     }
-    
+
     private fun setupNavController() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -101,7 +101,6 @@ class HomeActivity : AppCompatActivity() {
         binding.bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> {
-                    // Nếu đang không ở HomeFragment, sử dụng popBackStack để quay về
                     if (navController.currentDestination?.id != R.id.homeFragment) {
                         // Quay về HomeFragment mà không tạo instance mới
                         navController.popBackStack(R.id.homeFragment, false)

@@ -1,6 +1,5 @@
 package com.healthtech.doccareplus.ui.home
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.common.base.BaseDataViewModel
@@ -28,10 +27,11 @@ class HomeViewModel @Inject constructor(
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser = _currentUser.asStateFlow()
-    
+
     // Trạng thái theo dõi việc tải dữ liệu ban đầu
     private val _isInitialLoadComplete = MutableStateFlow(false)
     val isInitialLoadComplete = _isInitialLoadComplete.asStateFlow()
+
 
     init {
         // Khởi động tải dữ liệu ngay khi ViewModel được tạo
@@ -41,13 +41,13 @@ class HomeViewModel @Inject constructor(
     private fun observeData() {
         // Tải dữ liệu người dùng (không ưu tiên cao)
         observeUser()
-        
+
         // Tải dữ liệu categories và doctors (ưu tiên cao)
         viewModelScope.launch(Dispatchers.IO) {
             // Sử dụng Dispatchers.IO để không block main thread
             observeCategories(categoryRepository)
             observeDoctors(doctorRepository)
-            
+
             // Đánh dấu đã tải xong dữ liệu ban đầu
             withContext(Dispatchers.Main) {
                 _isInitialLoadComplete.value = true
@@ -77,14 +77,14 @@ class HomeViewModel @Inject constructor(
         // Ở đây chỉ cập nhật UI theo data, không xử lý Glide
         binding.apply {
             tvUserName.text = user.name
-            
+
             // Chuẩn bị resource ID avatar dựa trên gender
             val avatarResId = when (user.gender) {
                 Gender.MALE -> R.mipmap.avatar_male_default
                 Gender.FEMALE -> R.mipmap.avatar_female_default
                 else -> R.mipmap.avatar_bear_default
             }
-            
+
             // Trả về thông tin cần thiết để Activity/Fragment có thể load avatar
             if (user.avatar.isNullOrEmpty()) {
                 // Sử dụng avatar mặc định
@@ -102,10 +102,10 @@ class HomeViewModel @Inject constructor(
     fun refreshData() {
         // Đặt lại trạng thái tải
         _isInitialLoadComplete.value = false
-        
+
         // Gọi phương thức refresh của BaseDataViewModel
         refreshAllData(categoryRepository, doctorRepository)
-        
+
         // Tải lại thông tin user
         observeUser()
     }
@@ -124,7 +124,7 @@ class HomeViewModel @Inject constructor(
             try {
                 // Kích hoạt flow observeCategories nhưng chỉ lấy giá trị đầu tiên (local data)
                 categoryRepository.observeCategories().first()
-                
+
                 // Không cần thiết phải refreshCategories() vì:
                 // 1. observeCategories() đã tự động fetch từ remote sau khi emit local
                 // 2. Nếu vẫn muốn refresh, có thể làm như sau:

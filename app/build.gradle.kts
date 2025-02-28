@@ -9,6 +9,7 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.50"
 //    id("kotlin-kapt")
     id("org.jetbrains.kotlin.kapt")
+    id ("kotlin-parcelize")
 }
 
 
