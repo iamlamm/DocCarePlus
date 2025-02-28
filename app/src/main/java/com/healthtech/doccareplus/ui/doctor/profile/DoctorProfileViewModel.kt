@@ -3,9 +3,13 @@ package com.healthtech.doccareplus.ui.doctor.profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.healthtech.doccareplus.domain.model.BookingRequest
 import com.healthtech.doccareplus.domain.model.TimePeriod
 import com.healthtech.doccareplus.domain.model.TimeSlot
+import com.healthtech.doccareplus.domain.repository.AuthRepository
 import com.healthtech.doccareplus.domain.repository.TimeSlotRepository
+import com.healthtech.doccareplus.domain.service.BookingService
+import com.healthtech.doccareplus.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +23,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DoctorProfileViewModel @Inject constructor(
-    private val timeSlotRepository: TimeSlotRepository
+    private val timeSlotRepository: TimeSlotRepository,
+    private val bookingService: BookingService,
+    private val userRepository: UserRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow<DoctorProfileState>(DoctorProfileState.Idle)
     val state: StateFlow<DoctorProfileState> = _state.asStateFlow()
@@ -32,6 +38,9 @@ class DoctorProfileViewModel @Inject constructor(
 
     private val _selectedTimeSlot = MutableStateFlow<TimeSlot?>(null)
     val selectedTimeSlot: StateFlow<TimeSlot?> = _selectedTimeSlot.asStateFlow()
+
+    private val _selectedDate = MutableStateFlow<Date?>(null)
+    val selectedDate: StateFlow<Date?> = _selectedDate.asStateFlow()
 
     init {
         loadInitialData()
@@ -46,7 +55,10 @@ class DoctorProfileViewModel @Inject constructor(
                     _timeSlots.value = slots
                     Log.d("TimeSlots", "Received ${slots.size} time slots")
                 } else {
-                    Log.e("TimeSlots", "Error loading time slots: ${result.exceptionOrNull()?.message}")
+                    Log.e(
+                        "TimeSlots",
+                        "Error loading time slots: ${result.exceptionOrNull()?.message}"
+                    )
                 }
             }
         }
@@ -73,6 +85,7 @@ class DoctorProfileViewModel @Inject constructor(
     }
 
     fun onDateSelected(date: Date) {
+        _selectedDate.value = date
         val currentState = _state.value
         if (currentState is DoctorProfileState.Success) {
             _state.value = currentState.copy(selectedDate = date)
@@ -127,5 +140,52 @@ class DoctorProfileViewModel @Inject constructor(
 
     fun resetSelectedTimeSlot() {
         _selectedTimeSlot.value = null
+    }
+
+    fun bookAppointment(doctorId: Int) {
+        viewModelScope.launch {
+            val selectedDate = _selectedDate.value
+            val selectedSlot = _selectedTimeSlot.value
+
+            if (selectedDate == null) {
+                _state.value = DoctorProfileState.Error("Vui lòng chọn ngày")
+                return@launch
+            }
+
+            if (selectedSlot == null) {
+                _state.value = DoctorProfileState.Error("Vui lòng chọn giờ khám")
+                return@launch
+            }
+
+            try {
+                _state.value = DoctorProfileState.BookingLoading
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val formattedDate = dateFormat.format(selectedDate)
+
+                val userId = userRepository.getCurrentUserId()
+                val request = BookingRequest(
+                    doctorId = doctorId,
+                    userId = userId!!,
+                    date = formattedDate,
+                    slotId = selectedSlot.id
+                )
+
+                bookingService.bookAppointment(request)
+                    .collect { result ->
+                        result.fold(
+                            onSuccess = { appointmentId ->
+                                _state.value = DoctorProfileState.BookingSuccess(appointmentId)
+                            },
+                            onFailure = { e ->
+                                _state.value =
+                                    DoctorProfileState.Error(e.message ?: "Đặt lịch thất bại")
+                            }
+                        )
+                    }
+            } catch (e: Exception) {
+                _state.value = DoctorProfileState.Error(e.message ?: "Đã xảy ra lỗi")
+            }
+        }
     }
 }

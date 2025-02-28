@@ -5,4 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     fun observeCurrentUser(): Flow<Result<User>>
+
+    fun getCurrentUserId(): String?
 }

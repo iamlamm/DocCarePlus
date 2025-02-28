@@ -17,4 +17,8 @@ class UserRepositoryImpl @Inject constructor(
             authApi.getCurrentUserId() ?: return flowOf(Result.failure(Exception("Not logged in")))
         return firebaseApi.observeUser(currentUserId)
     }
+
+    override fun getCurrentUserId(): String? {
+        return authApi.getCurrentUserId()
+    }
 }

@@ -120,6 +120,28 @@
         <argument
             android:name="doctor"
             app:argType="com.healthtech.doccareplus.domain.model.Doctor" />
+        <action
+            android:id="@+id/action_doctor_profile_to_success"
+            app:destination="@id/successFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/fade_out"
+            app:popUpTo="@id/doctorProfileFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/successFragment"
+        android:name="com.healthtech.doccareplus.ui.success.SuccessFragment"
+        android:label="SuccessFragment"
+        tools:layout="@layout/fragment_success">
+        <argument
+            android:name="appointmentId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_success_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/nav_home_graph"
+            app:popUpToInclusive="true" />
     </fragment>
 
 </navigation>

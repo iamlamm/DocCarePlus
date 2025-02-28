@@ -13,24 +13,21 @@ import com.bumptech.glide.Glide
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentDoctorProfileBinding
 import dagger.hilt.android.AndroidEntryPoint
-import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.graphics.Rect
-import android.widget.TextView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.healthtech.doccareplus.ui.doctor.adapter.CalendarAdapter
-import java.text.SimpleDateFormat
 import java.util.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.google.android.material.snackbar.Snackbar
 import com.healthtech.doccareplus.domain.model.TimeSlot
-import com.google.android.material.chip.Chip
 import com.healthtech.doccareplus.domain.model.TimePeriod
 import android.util.Log
+import androidx.navigation.fragment.findNavController
+import com.healthtech.doccareplus.utils.showErrorDialog
+import com.healthtech.doccareplus.utils.showInfoDialog
 
 @AndroidEntryPoint
 class DoctorProfileFragment : Fragment() {
@@ -55,6 +52,7 @@ class DoctorProfileFragment : Fragment() {
         setupTimeSlotChips()
         observeState()
         observeTimeSlots()
+        setupBookingButton()
     }
 
     private fun setupViews() {
@@ -102,14 +100,51 @@ class DoctorProfileFragment : Fragment() {
         when (state) {
             is DoctorProfileState.Idle -> hideLoading()
             is DoctorProfileState.Loading -> showLoading()
+            is DoctorProfileState.BookingLoading -> {
+                showLoading()
+                binding.btnBookAppointment.isEnabled = false
+            }
+
             is DoctorProfileState.Success -> {
                 hideLoading()
                 calendarAdapter.setDates(state.datesInMonth)
             }
 
+            is DoctorProfileState.BookingSuccess -> {
+                hideLoading()
+                binding.btnBookAppointment.isEnabled = true
+                showBookingSuccess(state.appointmentId)
+                // Navigate to appointment detail or confirmation screen
+                findNavController().navigate(
+                    DoctorProfileFragmentDirections.actionDoctorProfileToSuccess(state.appointmentId)
+                )
+            }
+
             is DoctorProfileState.Error -> {
                 hideLoading()
-                showError(state.message)
+                binding.btnBookAppointment.isEnabled = true
+                
+                when (state.message) {
+                    "Bạn đã đặt lịch khám vào khung giờ này" -> {
+                        showInfoDialog(
+                            title = "Đã đặt lịch",
+                            message = "Bạn đã đặt lịch khám vào khung giờ này. Vui lòng chọn khung giờ khác hoặc kiểm tra lịch hẹn của bạn."
+                        )
+                    }
+                    "Khung giờ này đã có người đặt lịch" -> {
+                        showInfoDialog(
+                            title = "Không khả dụng",
+                            message = "Khung giờ này đã có người đặt lịch. Vui lòng chọn khung giờ khác."
+                        )
+                    }
+                    "Bác sĩ không thể khám vào khung giờ này" -> {
+                        showInfoDialog(
+                            title = "Không khả dụng",
+                            message = "Bác sĩ không thể khám vào khung giờ này. Vui lòng chọn khung giờ khác."
+                        )
+                    }
+                    else -> showErrorDialog(message = state.message)
+                }
             }
         }
     }
@@ -124,6 +159,14 @@ class DoctorProfileFragment : Fragment() {
 
     private fun showError(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    private fun showBookingSuccess(appointmentId: String) {
+        Snackbar.make(
+            binding.root,
+            "Đặt lịch thành công! Mã cuộc hẹn: $appointmentId",
+            Snackbar.LENGTH_LONG
+        ).show()
     }
 
     /**
@@ -315,6 +358,12 @@ class DoctorProfileFragment : Fragment() {
                     viewModel.resetSelectedTimeSlot()
                 }
             }
+        }
+    }
+
+    private fun setupBookingButton() {
+        binding.btnBookAppointment.setOnClickListener {
+            viewModel.bookAppointment(args.doctor.id)
         }
     }
 

@@ -6,6 +6,8 @@ import java.util.Date
 sealed class DoctorProfileState {
     data object Idle : DoctorProfileState()
     data object Loading : DoctorProfileState()
+    data object BookingLoading : DoctorProfileState()
+    data class BookingSuccess(val appointmentId: String) : DoctorProfileState()
 
     data class Success(
         val datesInMonth: List<Date>,     // Danh sách các ngày trong tháng được chọn
