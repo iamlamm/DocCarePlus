@@ -4,8 +4,11 @@ import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.healthtech.doccareplus.domain.model.BookingRequest
+import com.healthtech.doccareplus.domain.model.Notification
+import com.healthtech.doccareplus.domain.model.NotificationType
 import com.healthtech.doccareplus.domain.model.SlotAvailabilityResult
 import com.healthtech.doccareplus.domain.service.BookingService
+import com.healthtech.doccareplus.domain.service.NotificationService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
@@ -17,7 +20,8 @@ import javax.inject.Singleton
 
 @Singleton
 class BookingServiceImpl @Inject constructor(
-    private val database: FirebaseDatabase
+    private val database: FirebaseDatabase,
+    private val notificationService: NotificationService
 ) : BookingService {
 
     override suspend fun bookAppointment(request: BookingRequest): Flow<Result<String>> = flow {
@@ -31,8 +35,8 @@ class BookingServiceImpl @Inject constructor(
 
             // 2. Kiểm tra slot có khả dụng không
             when (val availability = checkSlotAvailability(
-                request.doctorId, 
-                request.date, 
+                request.doctorId,
+                request.date,
                 request.slotId,
                 request.userId
             )) {
@@ -41,13 +45,25 @@ class BookingServiceImpl @Inject constructor(
                     val appointmentId = createAppointment(request)
                     updateBookedSlots(request.doctorId, request.date, request.slotId)
                     emit(Result.success(appointmentId))
+
+                    val notification = Notification(
+                        title = "Đặt lịch thành công",
+                        message = "Bạn đã đặt lịch khám thành công. Mã cuộc hẹn: $appointmentId",
+                        time = System.currentTimeMillis(),
+                        type = NotificationType.APPOINTMENT,
+                        userId = request.userId
+                    )
+                    notificationService.createNotification(notification)
                 }
+
                 is SlotAvailabilityResult.AlreadyBookedByCurrentUser -> {
                     emit(Result.failure(Exception("Bạn đã đặt lịch khám vào khung giờ này")))
                 }
+
                 is SlotAvailabilityResult.AlreadyBookedByOther -> {
                     emit(Result.failure(Exception("Khung giờ này đã có người đặt lịch")))
                 }
+
                 is SlotAvailabilityResult.Unavailable -> {
                     emit(Result.failure(Exception("Bác sĩ không thể khám vào khung giờ này")))
                 }
@@ -91,7 +107,7 @@ class BookingServiceImpl @Inject constructor(
 
         val unavailableSlots = schedule.child("unavailableSlots")
             .children.mapNotNull { it.value.toString().toIntOrNull() }
-        
+
         if (slotId in unavailableSlots) {
             return SlotAvailabilityResult.Unavailable
         }
@@ -100,17 +116,18 @@ class BookingServiceImpl @Inject constructor(
         val appointmentsRef = database.getReference("appointments")
             .orderByChild("doctorId")
             .equalTo(doctorId.toDouble())
-        
+
         val appointmentsSnapshot = appointmentsRef.get().await()
-        val existingAppointment = appointmentsSnapshot.children.firstOrNull { 
+        val existingAppointment = appointmentsSnapshot.children.firstOrNull {
             it.child("date").value.toString() == date &&
-            it.child("slotId").value.toString().toInt() == slotId
+                    it.child("slotId").value.toString().toInt() == slotId
         }
 
         return when {
             existingAppointment == null -> SlotAvailabilityResult.Available
-            existingAppointment.child("userId").value.toString() == currentUserId -> 
+            existingAppointment.child("userId").value.toString() == currentUserId ->
                 SlotAvailabilityResult.AlreadyBookedByCurrentUser
+
             else -> SlotAvailabilityResult.AlreadyBookedByOther
         }
     }

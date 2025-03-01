@@ -44,6 +44,7 @@ class HomeActivity : AppCompatActivity() {
             // Quan sát dữ liệu người dùng (có thể làm sau)
             withContext(Dispatchers.Main) {
                 observeCurrentUser()
+                observerNotificationBadge()
             }
         }
     }
@@ -64,16 +65,37 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
+    private fun observerNotificationBadge(){
+        lifecycleScope.launch {
+            viewModel.unreadNotificationCount.collect {
+                viewModel.updateNotificationBadge(binding)
+            }
+        }
+    }
+
     private fun setupClickListeners() {
-        binding.ivUserAvatar.setOnClickListener {
-            navController.navigate(R.id.action_global_profile)
+        // binding.ivUserAvatar.setOnClickListener {
+        //     navController.navigate(R.id.action_global_profile)
+        // }
+        binding.apply {
+            ivUserAvatar.setOnClickListener {
+                navController.navigate(R.id.action_global_profile)
+            }
+
+            btnNotification.setOnClickListener {
+                navController.navigate(R.id.action_global_notification)
+            }
         }
     }
 
     private fun setupNavigation() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.allCategoriesFragment, R.id.allDoctorsFragment, R.id.allDoctorsFragment, R.id.profileFragment -> {
+                R.id.allCategoriesFragment,
+                R.id.allDoctorsFragment,
+                R.id.allDoctorsFragment,
+                R.id.profileFragment,
+                R.id.notificationFragment -> {
                     hideAppBarAndBottomAppBar()
                 }
 

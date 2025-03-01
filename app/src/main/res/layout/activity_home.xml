@@ -19,8 +19,10 @@
             android:id="@+id/top_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            app:layout_constraintTop_toTopOf="parent">
+            android:paddingVertical="16dp"
+            android:paddingStart="16dp"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="RtlSymmetry">
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/iv_user_avatar"
@@ -70,12 +72,31 @@
                 android:id="@+id/btn_notification"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginEnd="16dp"
                 android:background="@drawable/grayish_green_oval_border"
                 android:contentDescription="@string/cd_notification_button"
                 android:src="@drawable/notification"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />
+
+            <TextView
+                android:id="@+id/tv_notification_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="-8dp"
+                android:layout_marginTop="-4dp"
+                android:gravity="center"
+                android:minWidth="18dp"
+                android:minHeight="18dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textColor="@color/steel_teal"
+                android:textSize="12sp"
+                app:layout_constraintStart_toEndOf="@id/btn_notification"
+                app:layout_constraintTop_toTopOf="@id/btn_notification"
+                tools:text="9+"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.AppBarLayout>
@@ -120,12 +141,12 @@
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_calendar"
         android:layout_width="wrap_content"
-        app:layout_behavior="com.healthtech.doccareplus.ui.widgets.behavior.BottomAppBarFABBehavior"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/steel_teal"
         android:contentDescription="@string/cd_calendar_fab"
         android:src="@drawable/calendar_menu"
         app:layout_anchor="@id/bottom_app_bar"
+        app:layout_behavior="com.healthtech.doccareplus.ui.widgets.behavior.BottomAppBarFABBehavior"
         app:maxImageSize="24dp"
         app:tint="@color/white" />
 

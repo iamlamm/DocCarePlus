@@ -1,5 +1,7 @@
 package com.healthtech.doccareplus.ui.home
 
+import android.util.Log
+import android.view.View
 import androidx.lifecycle.viewModelScope
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.common.base.BaseDataViewModel
@@ -9,9 +11,11 @@ import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.domain.repository.CategoryRepository
 import com.healthtech.doccareplus.domain.repository.DoctorRepository
 import com.healthtech.doccareplus.domain.repository.UserRepository
+import com.healthtech.doccareplus.domain.service.NotificationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -22,7 +26,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val doctorRepository: DoctorRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val notificationService: NotificationService
 ) : BaseDataViewModel() {
 
     private val _currentUser = MutableStateFlow<User?>(null)
@@ -32,10 +37,13 @@ class HomeViewModel @Inject constructor(
     private val _isInitialLoadComplete = MutableStateFlow(false)
     val isInitialLoadComplete = _isInitialLoadComplete.asStateFlow()
 
+    private val _unreadNotificationCount = MutableStateFlow(0)
+    val unreadNotificationCount: StateFlow<Int> = _unreadNotificationCount
 
     init {
         // Khởi động tải dữ liệu ngay khi ViewModel được tạo
         observeData()
+        observeUnreadNotifications()
     }
 
     private fun observeData() {
@@ -152,6 +160,29 @@ class HomeViewModel @Inject constructor(
             } catch (e: Exception) {
                 // Bỏ qua lỗi khi preload
             }
+        }
+    }
+
+    private fun observeUnreadNotifications() {
+        viewModelScope.launch {
+            val userId = userRepository.getCurrentUserId() ?: return@launch
+            notificationService.observeNotifications(userId)
+                .collect { result ->
+                    result.onSuccess { notifications ->
+                        _unreadNotificationCount.value = notifications.count { !it.read }
+                    }
+                    result.onFailure { error ->
+                        Log.e("observeUnreadNotifications", error.message ?: "Unknow error")
+                    }
+                }
+        }
+    }
+
+    fun updateNotificationBadge(binding: ActivityHomeBinding) {
+        binding.tvNotificationBadge.apply {
+            val count = unreadNotificationCount.value
+            visibility = if (count > 0) View.VISIBLE else View.GONE
+            text = if (count > 99) "99+" else count.toString()
         }
     }
 }

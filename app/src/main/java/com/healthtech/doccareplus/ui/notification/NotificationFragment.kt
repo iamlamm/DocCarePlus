@@ -4,57 +4,91 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.healthtech.doccareplus.R
+import com.healthtech.doccareplus.databinding.FragmentNotificationBinding
+import com.healthtech.doccareplus.ui.notification.adapter.NotificationAdapter
+import com.healthtech.doccareplus.ui.notification.viewmodel.NotificationViewModel
+import com.healthtech.doccareplus.ui.success.SuccessFragmentDirections
+import com.healthtech.doccareplus.ui.widgets.decoration.CustomItemDecoration
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [NotificationFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+@AndroidEntryPoint
 class NotificationFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentNotificationBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: NotificationViewModel by viewModels()
+    private val adapter = NotificationAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+        // Xử lý nút back
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    navigateBack()
+                }
+            }
+        )
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_notification, container, false)
+    ): View {
+        _binding = FragmentNotificationBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment NotificationFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            NotificationFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+        observeNotifications()
+        setupToolbar()
+    }
+
+    private fun setupToolbar() {
+        binding.toolbar.apply {
+            setNavigationOnClickListener { navigateBack() }
+        }
+    }
+
+    private fun setupRecyclerView() {
+        adapter.setOnNotificationClickListener { notificationId ->
+            viewModel.markAsRead(notificationId)
+        }
+
+        binding.rcvNotification.apply {
+            adapter = this@NotificationFragment.adapter
+            layoutManager = LinearLayoutManager(context)
+            addItemDecoration(CustomItemDecoration(context))
+        }
+    }
+
+    private fun observeNotifications() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.notifications.collect { notifications ->
+                adapter.submitList(notifications)
             }
+        }
+    }
+
+    private fun navigateBack() {
+        findNavController().navigate(R.id.action_notification_to_previous)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
