@@ -107,21 +107,25 @@ class LoginFragment : Fragment() {
             viewModel.loginState.collect { state ->
                 when (state) {
                     is LoginState.Loading -> {
-                        binding.progressBarLogin.visibility = View.VISIBLE
+//                        binding.progressBarLogin.visibility = View.VISIBLE
+                        binding.progressBarLogin.setLoading(true)
                         binding.btnLoginSubmit.isEnabled = false
                     }
 
                     is LoginState.Success -> {
-                        binding.progressBarLogin.visibility = View.GONE
+//                        binding.progressBarLogin.visibility = View.GONE
+                        binding.progressBarLogin.setLoading(false)
                         binding.btnLoginSubmit.isEnabled = true
-                        // findNavController().navigate(R.id.action_login_to_home)
+                        
+                        // Chuyển đến màn hình chính
                         val intent = Intent(requireContext(), HomeActivity::class.java)
                         startActivity(intent)
                         requireActivity().finish()
                     }
 
                     is LoginState.Error -> {
-                        binding.progressBarLogin.visibility = View.GONE
+//                        binding.progressBarLogin.visibility = View.GONE
+                        binding.progressBarLogin.setLoading(false)
                         binding.btnLoginSubmit.isEnabled = true
 //                        MaterialAlertDialogBuilder(requireContext())
 //                            .setTitle("Thông báo")
@@ -143,7 +147,8 @@ class LoginFragment : Fragment() {
                     }
 
                     else -> {
-                        binding.progressBarLogin.visibility = View.GONE
+//                        binding.progressBarLogin.visibility = View.GONE
+                        binding.progressBarLogin.setLoading(false)
                         binding.btnLoginSubmit.isEnabled = true
                     }
                 }

@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface BookingService {
     /**
-     * Int là appointmentId
+     * String là appointmentId
      */
     suspend fun bookAppointment(request: BookingRequest): Flow<Result<String>>
 }

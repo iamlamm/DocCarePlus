@@ -4,6 +4,7 @@ import com.healthtech.doccareplus.data.local.preferences.UserPreferences
 import com.healthtech.doccareplus.data.remote.api.AuthApi
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.domain.repository.AuthRepository
+import com.zegocloud.zimkit.services.ZIMKit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,10 +37,11 @@ class AuthRepositoryImpl @Inject constructor(
         name: String,
         email: String,
         password: String,
-        phoneNumber: String
+        phoneNumber: String,
+        avatar: String
     ): Result<User> {
         return try {
-            val result = authApi.register(name, email, password, phoneNumber)
+            val result = authApi.register(name, email, password, phoneNumber, avatar)
             result
         } catch (e: Exception) {
             Result.failure(e)
@@ -55,6 +57,35 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateEmail(
+        currentPassword: String,
+        newEmail: String
+    ): Result<Unit> {
+        return try {
+            val result = authApi.updateEmail(currentPassword, newEmail)
+            // Không cập nhật local storage ngay lập tức
+            // Chỉ cập nhật khi email đã được xác thực
+            result
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun cancelEmailChange(): Result<Unit> {
+        return try {
+            authApi.cancelEmailChange()
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun checkPendingEmailChange(): Result<String?> {
+        return try {
+            authApi.checkPendingEmailChange()
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
 //    override suspend fun getCurrentUser(): Result<User> {
 //        return try {
@@ -77,6 +108,7 @@ class AuthRepositoryImpl @Inject constructor(
 //    }
 
     override fun logout() {
+        ZIMKit.disconnectUser()
         userPreferences.clearUser()
         authApi.signOut()
     }

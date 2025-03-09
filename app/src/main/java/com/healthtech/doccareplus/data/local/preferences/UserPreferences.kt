@@ -73,4 +73,5 @@ class UserPreferences @Inject constructor(
         return sharedPreferences.getBoolean("is_logged_in", false) &&
                 sharedPreferences.getBoolean("remember_me", false)
     }
+
 }

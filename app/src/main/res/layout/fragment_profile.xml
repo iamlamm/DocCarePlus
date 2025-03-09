@@ -56,21 +56,58 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <!-- Logout Button -->
+            <!-- Edit Profile Button -->
             <ImageButton
-                android:id="@+id/btn_logout"
+                android:id="@+id/btn_edit_profile"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_gravity="end"
                 android:background="@drawable/bg_circle_stroke_white_ripple"
                 android:scaleType="center"
-                android:src="@drawable/logout"
+                android:src="@drawable/ic_edit_profile"
                 app:tint="@color/white"
                 tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck"
                 tools:layout_editor_absoluteX="355dp"
                 tools:layout_editor_absoluteY="8dp" />
 
         </com.google.android.material.appbar.MaterialToolbar>
+
+        <!-- Thêm sau toolbar và trước iv_profile (khoảng dòng 74) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/pending_email_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="#FFF3E0"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/pending_email_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#E65100"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/cancel_email_change"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="Hủy thay đổi"
+                    android:textColor="#E65100" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Profile Image -->
         <com.google.android.material.imageview.ShapeableImageView
@@ -86,23 +123,23 @@
             app:shapeAppearanceOverlay="@style/CircleImageView"
             tools:src="@mipmap/avatar_male_default" />
 
-        <!-- Edit Icon -->
-        <FrameLayout
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginEnd="-4dp"
-            android:layout_marginBottom="-4dp"
-            android:background="@drawable/bg_change_avatar"
-            app:layout_constraintBottom_toBottomOf="@id/iv_profile"
-            app:layout_constraintEnd_toEndOf="@id/iv_profile">
+<!--        &lt;!&ndash; Edit Icon &ndash;&gt;-->
+<!--        <FrameLayout-->
+<!--            android:layout_width="30dp"-->
+<!--            android:layout_height="30dp"-->
+<!--            android:layout_marginEnd="-4dp"-->
+<!--            android:layout_marginBottom="-4dp"-->
+<!--            android:background="@drawable/bg_change_avatar"-->
+<!--            app:layout_constraintBottom_toBottomOf="@id/iv_profile"-->
+<!--            app:layout_constraintEnd_toEndOf="@id/iv_profile">-->
 
-            <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_gravity="center"
-                android:src="@drawable/change_avatar"
-                app:tint="@color/white" />
-        </FrameLayout>
+<!--            <ImageView-->
+<!--                android:layout_width="18dp"-->
+<!--                android:layout_height="18dp"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:src="@drawable/change_avatar"-->
+<!--                app:tint="@color/white" />-->
+<!--        </FrameLayout>-->
 
         <!--        Role Container-->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -278,6 +315,52 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_about_title" />
+
+        <!-- UID Section -->
+        <TextView
+            android:id="@+id/tv_uid_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:text="User ID"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_about_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_rounded_stroke_gray"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_uid_title">
+
+            <TextView
+                android:id="@+id/tv_uid"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Your User ID"
+                android:textColor="@color/blue_gray_light"
+                android:textIsSelectable="true"
+                tools:text="abc123def456ghi789" />
+
+            <ImageButton
+                android:id="@+id/btn_copy_uid"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Copy UID"
+                android:src="@drawable/ic_copy"
+                app:tint="@color/steel_teal"
+                tools:ignore="TouchTargetSizeCheck" />
+        </LinearLayout>
 
         <!--        &lt;!&ndash; Family Member Section &ndash;&gt;-->
         <!--        <TextView-->

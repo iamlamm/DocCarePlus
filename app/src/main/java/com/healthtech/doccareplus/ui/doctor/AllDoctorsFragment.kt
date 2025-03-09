@@ -76,12 +76,12 @@ class AllDoctorsFragment : BaseFragment() {
                     if (binding.searchView.visibility == View.VISIBLE) {
                         toggleSearchView()
                     } else {
-                        isEnabled = false
-                        requireActivity().onBackPressedDispatcher.onBackPressed()
+//                        isEnabled = false
+                        navigateBack()
                     }
                 }
-
-            })
+            }
+        )
     }
 
     private fun toggleSearchView() {
@@ -244,14 +244,14 @@ class AllDoctorsFragment : BaseFragment() {
 
     private fun closeSearchAndNavigateBack() {
         if (binding.searchView.visibility == View.VISIBLE) {
-//            binding.searchView.setQuery("", false)
-//            hideKeyboard()
-//            binding.searchView.clearFocus()
             binding.searchView.visibility = View.GONE
-//            viewModel.setSearchActive(false)
+            viewModel.setSearchActive(false)
         }
-        findNavController().navigateUp()
+        navigateBack()
+    }
 
+    private fun navigateBack() {
+        findNavController().navigateUp()
     }
 
     override fun cleanupViewReferences() {

@@ -35,6 +35,7 @@ class SplashFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.progressBarSplash.setLoading(true)
+//        binding.progressBarSplash.visibility = View.VISIBLE
         viewModel.preLoadHomeData()
         viewModel.preloadLoginResources()
         observeStartDestination()
@@ -47,6 +48,7 @@ class SplashFragment : Fragment() {
             viewModel.startDestination.collectLatest { destination ->
                 if (destination != 0) {
                     binding.progressBarSplash.setLoading(false)
+//                    binding.progressBarSplash.visibility = View.GONE
 
                     when (destination) {
                         R.id.loginFragment -> {

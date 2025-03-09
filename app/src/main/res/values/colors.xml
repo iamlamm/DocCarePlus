@@ -34,4 +34,11 @@
     <color name="error">#e74c3c</color>
     <color name="warning">#f39c12</color>
     <color name="info">#3498db</color>
+
+    <!-- Call Button Colors -->
+    <color name="accept_call_button">#27ae60</color>
+    <color name="reject_call_button">#e74c3c</color>
+
+    <color name="mic_button">#3498db</color>  <!-- Sử dụng màu xanh dương giống màu info -->
+    <color name="speaker_button">#f39c12</color>  <!-- Sử dụng màu cam giống màu warning -->
 </resources>

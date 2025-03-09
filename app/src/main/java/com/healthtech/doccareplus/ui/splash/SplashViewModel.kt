@@ -1,12 +1,15 @@
 package com.healthtech.doccareplus.ui.splash
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.data.local.preferences.UserPreferences
 import com.healthtech.doccareplus.domain.repository.CategoryRepository
 import com.healthtech.doccareplus.domain.repository.DoctorRepository
+import com.zegocloud.zimkit.services.ZIMKit
 import dagger.hilt.android.lifecycle.HiltViewModel
+import im.zego.zim.enums.ZIMErrorCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -38,7 +41,13 @@ class SplashViewModel @Inject constructor(
 
     private fun checkLoginStatus() {
         viewModelScope.launch {
-            val destination = if (userPreferences.isUserLoggedIn()) {
+            val isLoggedIn = userPreferences.isUserLoggedIn()
+            val destination = if (isLoggedIn) {
+                // Reconnect ZIMKit nếu user đã đăng nhập từ trước
+                userPreferences.getUser()?.let { user ->
+                    reconnectZIMKit(user.id.toString(), user.name)
+                }
+                
                 R.id.homeFragment
             } else {
                 R.id.loginFragment
@@ -51,6 +60,20 @@ class SplashViewModel @Inject constructor(
             
             // Cập nhật destination sau khi đã kiểm tra
             _startDestination.value = destination
+        }
+    }
+    
+    private fun reconnectZIMKit(userId: String, userName: String) {
+        val avatarUrl = "https://storage.zego.im/IMKit/avatar/avatar-0.png"
+        
+        // Không thể kiểm tra trực tiếp trạng thái đăng nhập, 
+        // nên luôn thử kết nối lại - ZIMKit sẽ tự xử lý
+        ZIMKit.connectUser(userId, userName, avatarUrl) { error ->
+            if (error.code != ZIMErrorCode.SUCCESS) {
+                Log.e("SplashViewModel", "ZIMKit reconnect failed: ${error.message}")
+            } else {
+                Log.d("SplashViewModel", "ZIMKit reconnect success with userId: $userId")
+            }
         }
     }
     

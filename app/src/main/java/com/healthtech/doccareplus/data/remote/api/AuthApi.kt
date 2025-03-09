@@ -14,6 +14,12 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import java.util.concurrent.TimeUnit
 
 @Singleton
 class AuthApi @Inject constructor(
@@ -21,6 +27,10 @@ class AuthApi @Inject constructor(
     private val database: FirebaseDatabase,
     private val networkUtils: NetworkUtils
 ) {
+    init {
+        setupEmailVerificationListener()
+    }
+
     suspend fun login(email: String, password: String): Result<User> {
         return try {
             if (!networkUtils.isNetworkAvailable()) {
@@ -53,7 +63,7 @@ class AuthApi @Inject constructor(
     }
 
     suspend fun register(
-        name: String, email: String, password: String, phoneNumber: String
+        name: String, email: String, password: String, phoneNumber: String, avatar: String
     ): Result<User> {
         return try {
             if (!networkUtils.isNetworkAvailable()) {
@@ -68,7 +78,11 @@ class AuthApi @Inject constructor(
                 firebaseUser.sendEmailVerification().await()
 
                 val user = User(
-                    id = firebaseUser.uid, name = name, email = email, phoneNumber = phoneNumber
+                    id = firebaseUser.uid,
+                    name = name,
+                    email = email,
+                    phoneNumber = phoneNumber,
+                    avatar = avatar
                 )
                 database.getReference("users").child(user.id).setValue(user).await()
                 Result.success(user)
@@ -95,7 +109,7 @@ class AuthApi @Inject constructor(
                                 users.children.first().ref.removeValue().await()
 
                                 // Đệ quy để tạo tài khoản mới
-                                register(name, email, password, phoneNumber)
+                                register(name, email, password, phoneNumber, avatar)
                             }
                         } catch (e: FirebaseAuthInvalidCredentialsException) {
                             Result.failure(Exception("Email này đã được đăng ký với mật khẩu khác. Vui lòng sử dụng email khác hoặc đăng nhập với mật khẩu đúng."))
@@ -155,5 +169,144 @@ class AuthApi @Inject constructor(
 
     fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    suspend fun updateEmail(currentPassword: String, newEmail: String): Result<Unit> = 
+        withContext(Dispatchers.IO) {
+            try {
+                if (!networkUtils.isNetworkAvailable()) {
+                    return@withContext Result.failure(Exception("Không có kết nối internet!"))
+                }
+
+                val user = auth.currentUser ?: return@withContext Result.failure(
+                    Exception("Người dùng chưa đăng nhập")
+                )
+
+                // 1. Xác thực lại người dùng
+                val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
+                user.reauthenticate(credential).await()
+
+                // 2. Kiểm tra email mới có tồn tại trong hệ thống không
+                val usersRef = database.getReference("users")
+                val snapshot = usersRef.orderByChild("email").equalTo(newEmail).get().await()
+                if (snapshot.exists()) {
+                    return@withContext Result.failure(
+                        Exception("Email này đã được sử dụng bởi tài khoản khác")
+                    )
+                }
+
+                // 3. Gửi email xác minh đến địa chỉ mới
+                user.verifyBeforeUpdateEmail(newEmail).await()
+
+                // 4. Lưu thông tin email mới vào một node tạm thời
+                val pendingEmailRef = database.getReference("pending_email_changes").child(user.uid)
+                pendingEmailRef.setValue(mapOf(
+                    "newEmail" to newEmail,
+                    "timestamp" to System.currentTimeMillis(),
+                    "currentEmail" to user.email
+                )).await()
+
+                // 5. Trả về thành công, chờ người dùng xác thực
+                Result.success(Unit)
+
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                when (e.errorCode) {
+                    "ERROR_WRONG_PASSWORD" -> 
+                        Result.failure(Exception("Mật khẩu không chính xác"))
+                    "ERROR_INVALID_EMAIL" -> 
+                        Result.failure(Exception("Email mới không hợp lệ"))
+                    else -> 
+                        Result.failure(Exception("Thông tin xác thực không hợp lệ"))
+                }
+            } catch (e: FirebaseAuthRecentLoginRequiredException) {
+                Result.failure(Exception("Vui lòng đăng nhập lại để thực hiện thao tác này"))
+            } catch (e: Exception) {
+                Result.failure(Exception("Lỗi cập nhật email: ${e.message}"))
+            }
+        }
+    
+    suspend fun cancelEmailChange(): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val user = auth.currentUser ?: return@withContext Result.failure(
+                Exception("Người dùng chưa đăng nhập")
+            )
+            
+            // Xóa pending change
+            database.getReference("pending_email_changes")
+                .child(user.uid)
+                .removeValue()
+                .await()
+                
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(Exception("Lỗi khi hủy thay đổi email: ${e.message}"))
+        }
+    }
+    
+    suspend fun checkPendingEmailChange(): Result<String?> = withContext(Dispatchers.IO) {
+        try {
+            val user = auth.currentUser ?: return@withContext Result.failure(
+                Exception("Người dùng chưa đăng nhập")
+            )
+            
+            val snapshot = database.getReference("pending_email_changes")
+                .child(user.uid)
+                .get()
+                .await()
+                
+            val pendingEmail = if (snapshot.exists()) {
+                snapshot.child("newEmail").getValue(String::class.java)
+            } else null
+            
+            Result.success(pendingEmail)
+        } catch (e: Exception) {
+            Result.failure(Exception("Lỗi khi kiểm tra thay đổi email: ${e.message}"))
+        }
+    }
+
+    private fun setupEmailVerificationListener() {
+        auth.addAuthStateListener { firebaseAuth ->
+            val user = firebaseAuth.currentUser
+            if (user != null && user.isEmailVerified) {
+                // Kiểm tra xem có pending email change không
+                database.getReference("pending_email_changes")
+                    .child(user.uid)
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            val newEmail = snapshot.child("newEmail").getValue(String::class.java)
+                            if (newEmail != null) {
+                                // Cập nhật email trong database chính
+                                database.getReference("users")
+                                    .child(user.uid)
+                                    .child("email")
+                                    .setValue(newEmail)
+                                    .addOnSuccessListener {
+                                        // Xóa pending email change
+                                        snapshot.ref.removeValue()
+                                    }
+                            }
+                        }
+                    }
+            }
+        }
+        
+        // Tự động xóa pending changes quá hạn (24 giờ)
+        cleanupExpiredPendingChanges()
+    }
+    
+    private fun cleanupExpiredPendingChanges() {
+        val expirationTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1) // 24 giờ
+        database.getReference("pending_email_changes")
+            .orderByChild("timestamp")
+            .endAt(expirationTime.toDouble())
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    snapshot.children.forEach { it.ref.removeValue() }
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    // Xử lý lỗi
+                }
+            })
     }
 }

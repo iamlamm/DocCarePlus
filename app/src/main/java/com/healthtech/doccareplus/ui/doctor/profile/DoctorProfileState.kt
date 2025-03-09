@@ -15,4 +15,6 @@ sealed class DoctorProfileState {
     ) : DoctorProfileState()
 
     data class Error(val message: String) : DoctorProfileState()
+
+    data class InitiateChat(val doctorId: String, val doctorName: String) : DoctorProfileState()
 }

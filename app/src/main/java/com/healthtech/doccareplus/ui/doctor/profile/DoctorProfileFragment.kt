@@ -1,6 +1,9 @@
 package com.healthtech.doccareplus.ui.doctor.profile
 
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -26,8 +29,12 @@ import com.healthtech.doccareplus.domain.model.TimeSlot
 import com.healthtech.doccareplus.domain.model.TimePeriod
 import android.util.Log
 import androidx.navigation.fragment.findNavController
+import com.healthtech.doccareplus.utils.SnackbarUtils
 import com.healthtech.doccareplus.utils.showErrorDialog
 import com.healthtech.doccareplus.utils.showInfoDialog
+import androidx.activity.OnBackPressedCallback
+import com.zegocloud.zimkit.common.ZIMKitRouter
+import com.zegocloud.zimkit.common.enums.ZIMKitConversationType
 
 @AndroidEntryPoint
 class DoctorProfileFragment : Fragment() {
@@ -36,6 +43,20 @@ class DoctorProfileFragment : Fragment() {
     private val args: DoctorProfileFragmentArgs by navArgs()
     private val viewModel: DoctorProfileViewModel by viewModels()
     private lateinit var calendarAdapter: CalendarAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Xử lý nút back
+        requireActivity().onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    navigateBack()
+                }
+            }
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -123,7 +144,7 @@ class DoctorProfileFragment : Fragment() {
             is DoctorProfileState.Error -> {
                 hideLoading()
                 binding.btnBookAppointment.isEnabled = true
-                
+
                 when (state.message) {
                     "Bạn đã đặt lịch khám vào khung giờ này" -> {
                         showInfoDialog(
@@ -131,20 +152,32 @@ class DoctorProfileFragment : Fragment() {
                             message = "Bạn đã đặt lịch khám vào khung giờ này. Vui lòng chọn khung giờ khác hoặc kiểm tra lịch hẹn của bạn."
                         )
                     }
+
                     "Khung giờ này đã có người đặt lịch" -> {
                         showInfoDialog(
                             title = "Không khả dụng",
                             message = "Khung giờ này đã có người đặt lịch. Vui lòng chọn khung giờ khác."
                         )
                     }
+
                     "Bác sĩ không thể khám vào khung giờ này" -> {
                         showInfoDialog(
                             title = "Không khả dụng",
                             message = "Bác sĩ không thể khám vào khung giờ này. Vui lòng chọn khung giờ khác."
                         )
                     }
+
                     else -> showErrorDialog(message = state.message)
                 }
+            }
+            
+            is DoctorProfileState.InitiateChat -> {
+                // Xử lý chuyển đến màn hình chat
+                val action = DoctorProfileFragmentDirections.actionDoctorProfileToChat(
+                    conversationId = state.doctorId,
+                    title = state.doctorName
+                )
+                findNavController().navigate(action)
             }
         }
     }
@@ -265,14 +298,70 @@ class DoctorProfileFragment : Fragment() {
     private fun setupToolbar() {
         binding.toolbar.apply {
             setNavigationOnClickListener {
-                requireActivity().onBackPressedDispatcher.onBackPressed()
+                navigateBack()
+            }
+            inflateMenu(R.menu.doctor_profile_menu)
+            setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.action_chat -> {
+                        startChatWithDoctor()
+                        true
+                    }
+                    R.id.action_voice_call -> {
+                        startVoiceCallWithDoctor()
+                        true
+                    }
+                    R.id.action_video_call -> {
+                        startVideoCallWithDoctor()
+                        true
+                    }
+                    else -> false
+                }
             }
         }
+    }
+
+    private fun navigateBack() {
+        findNavController().navigateUp()
+    }
+
+    private fun startChatWithDoctor() {
+        try {
+            // Chuyển đổi ID bác sĩ sang chuỗi
+            val doctorIdString = args.doctor.id.toString()
+            
+            // Gọi trực tiếp vào ZIMKit như trong ví dụ
+            ZIMKitRouter.toMessageActivity(
+                requireContext(),
+                doctorIdString,
+                ZIMKitConversationType.ZIMKitConversationTypePeer
+            )
+        } catch (e: Exception) {
+            Log.e("DoctorProfileFragment", "Error starting chat: ${e.message}", e)
+            SnackbarUtils.showErrorSnackbar(binding.root, "Lỗi khi bắt đầu trò chuyện: ${e.message}")
+        }
+    }
+
+    private fun startVoiceCallWithDoctor() {
+        // Tạm thời thông báo tính năng sắp có
+        SnackbarUtils.showInfoSnackbar(
+            binding.root,
+            "Tính năng gọi điện sẽ sớm được cập nhật"
+        )
+    }
+
+    private fun startVideoCallWithDoctor() {
+        // Tạm thời thông báo tính năng sắp có
+        SnackbarUtils.showInfoSnackbar(
+            binding.root,
+            "Tính năng gọi video sẽ sớm được cập nhật"
+        )
     }
 
     @SuppressLint("SetTextI18n")
     private fun displayDoctorInfo() {
         binding.apply {
+            tvDoctorUid.text = args.doctor.id.toString()
             tvDoctorName.text = args.doctor.name
             tvDoctorProfileSpecialty.text = args.doctor.specialty
             tvDoctorRate.text = args.doctor.rating.toString()
@@ -283,6 +372,31 @@ class DoctorProfileFragment : Fragment() {
                 .placeholder(R.drawable.doctor)
                 .error(R.drawable.doctor)
                 .into(ivDoctorAvatar)
+        }
+        setupCopyUidButton()
+    }
+
+    private fun setupCopyUidButton() {
+        binding.btnCopyDoctorUid.setOnClickListener {
+            val clipboard =
+                requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Doctor UID", binding.tvDoctorUid.text)
+            clipboard.setPrimaryClip(clip)
+
+            binding.btnCopyDoctorUid.animate()
+                .scaleX(0.8f)
+                .scaleY(0.8f)
+                .setDuration(100)
+                .withEndAction {
+                    binding.btnCopyDoctorUid.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(100)
+                        .start()
+                }
+                .start()
+
+            SnackbarUtils.showSuccessSnackbar(binding.root, getString(R.string.uid_copied))
         }
     }
 

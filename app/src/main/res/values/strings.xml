@@ -87,4 +87,10 @@
     <string name="logout">Đăng xuất</string>
     <string name="logout_confirmation">Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?</string>
     <string name="cancel">Hủy</string>
+    <string name="uid_copied">UID copied</string>
+    <string name="more_menu_logout">Logout</string>
+    <string name="login_subtitle">Login to your account to continue</string>
+    <string name="change_email">Thay đổi email</string>
+    <string name="current_password">Mật khẩu hiện tại</string>
+    <string name="new_email">Email mới</string>
 </resources>

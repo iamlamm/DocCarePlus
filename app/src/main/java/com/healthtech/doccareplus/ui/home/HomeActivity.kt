@@ -65,7 +65,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun observerNotificationBadge(){
+    private fun observerNotificationBadge() {
         lifecycleScope.launch {
             viewModel.unreadNotificationCount.collect {
                 viewModel.updateNotificationBadge(binding)
@@ -95,7 +95,8 @@ class HomeActivity : AppCompatActivity() {
                 R.id.allDoctorsFragment,
                 R.id.allDoctorsFragment,
                 R.id.profileFragment,
-                R.id.notificationFragment -> {
+                R.id.notificationFragment,
+                R.id.editProfileFragment -> {
                     hideAppBarAndBottomAppBar()
                 }
 
@@ -112,6 +113,11 @@ class HomeActivity : AppCompatActivity() {
                 R.id.moreFragment -> {
                     showAppBarAndBottomAppBar()
                     binding.bottomNav.selectedItemId = R.id.nav_more
+                }
+
+                R.id.chatFragment -> {
+                    hideAppBarAndBottomAppBar()
+                    binding.bottomNav.selectedItemId = R.id.nav_messages
                 }
 
                 else -> Unit
@@ -147,6 +153,17 @@ class HomeActivity : AppCompatActivity() {
                             navController.navigate(R.id.action_home_to_more)
                         } else {
                             navController.navigate(R.id.moreFragment)
+                        }
+                    }
+                    true
+                }
+
+                R.id.nav_messages -> {
+                    if (navController.currentDestination?.id != R.id.chatFragment) {
+                        if (navController.currentDestination?.id == R.id.homeFragment) {
+                            navController.navigate(R.id.action_home_to_chat)
+                        } else {
+                            navController.navigate(R.id.action_global_chat)
                         }
                     }
                     true

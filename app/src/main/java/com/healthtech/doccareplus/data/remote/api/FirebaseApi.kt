@@ -13,6 +13,7 @@ import com.healthtech.doccareplus.domain.model.TimePeriod
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -150,7 +151,10 @@ class FirebaseApi @Inject constructor(
                             val endTime = slotSnapshot.child("endTime").getValue(String::class.java)
 
                             if (id == null || startTime == null || endTime == null) {
-                                Log.e("FirebaseApi", "Thiếu thông tin cho time slot trong $periodName")
+                                Log.e(
+                                    "FirebaseApi",
+                                    "Thiếu thông tin cho time slot trong $periodName"
+                                )
                                 return@forEach
                             }
 
@@ -164,7 +168,10 @@ class FirebaseApi @Inject constructor(
                             Log.d("FirebaseApi", "Đã parse được slot: $timeSlot")
                             timeSlotList.add(timeSlot)
                         } catch (e: Exception) {
-                            Log.e("FirebaseApi", "Lỗi khi parse slot trong $periodName: ${e.message}")
+                            Log.e(
+                                "FirebaseApi",
+                                "Lỗi khi parse slot trong $periodName: ${e.message}"
+                            )
                         }
                     }
                 }
@@ -190,4 +197,15 @@ class FirebaseApi @Inject constructor(
         }
     }
 
+    suspend fun updateUserField(userId: String, fieldName: String, fieldValue: Any): Result<Unit> {
+        return try {
+            val userRef = database.getReference("users").child(userId)
+            val updates = hashMapOf<String, Any>(fieldName to fieldValue)
+            userRef.updateChildren(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("FirebaseApi", "Error updating user field: ${e.message}")
+            Result.failure(e)
+        }
+    }
 }

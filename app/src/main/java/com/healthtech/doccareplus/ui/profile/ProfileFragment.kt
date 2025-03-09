@@ -1,5 +1,8 @@
 package com.healthtech.doccareplus.ui.profile
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,6 +18,8 @@ import com.healthtech.doccareplus.databinding.FragmentProfileBinding
 import com.healthtech.doccareplus.domain.model.Gender
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.ui.auth.AuthActivity
+import com.healthtech.doccareplus.ui.profile.editprofile.EmailChangeState
+import com.healthtech.doccareplus.utils.SnackbarUtils
 import com.healthtech.doccareplus.utils.showErrorDialog
 import com.healthtech.doccareplus.utils.showWarningDialog
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,19 +42,63 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         observeProfileState()
+        observePendingEmailChange()
+
+        // Observe email change state
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.emailChangeState.collect { state ->
+                when (state) {
+                    is EmailChangeState.Loading -> {
+                        SnackbarUtils.showInfoSnackbar(binding.root, "Đang xử lý...")
+                    }
+
+                    is EmailChangeState.Success -> {
+                        SnackbarUtils.showSuccessSnackbar(binding.root, state.message)
+                    }
+
+                    is EmailChangeState.Error -> {
+                        showErrorDialog(
+                            title = getString(R.string.error),
+                            message = state.message,
+                            positiveText = getString(R.string.ok)
+                        )
+                    }
+
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
-        binding.btnLogout.setOnClickListener {
-            showWarningDialog(
-                title = getString(R.string.logout),
-                message = getString(R.string.logout_confirmation),
-                positiveText = getString(R.string.logout),
-                negativeText = getString(R.string.cancel),
-                onPositive = {
-                    logout()
-                })
+        binding.apply {
+            btnBack.setOnClickListener { findNavController().navigateUp() }
+
+            btnEditProfile.setOnClickListener {
+                findNavController().navigate(R.id.action_profile_to_editProfile)
+            }
+
+            btnCopyUid.setOnClickListener {
+                val clipboard =
+                    requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("UID", binding.tvUid.text)
+                clipboard.setPrimaryClip(clip)
+
+                binding.btnCopyUid.animate()
+                    .scaleX(0.8f)
+                    .scaleY(0.8f)
+                    .setDuration(100)
+                    .withEndAction {
+                        binding.btnCopyUid.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(100)
+                            .start()
+                    }
+                    .start()
+
+                SnackbarUtils.showSuccessSnackbar(binding.root, getString(R.string.uid_copied))
+            }
         }
     }
 
@@ -76,8 +125,28 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private fun observePendingEmailChange() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.pendingEmail.collect { pendingEmail ->
+                if (pendingEmail != null) {
+                    binding.pendingEmailBanner.visibility = View.VISIBLE
+                    binding.pendingEmailText.text =
+                        "Đang chờ xác thực email mới: $pendingEmail"
+                    binding.cancelEmailChange.setOnClickListener {
+                        viewModel.cancelEmailChange()
+                    }
+                } else {
+                    binding.pendingEmailBanner.visibility = View.GONE
+                }
+            }
+        }
+    }
+
     private fun updateUI(user: User) {
         binding.apply {
+            tvUid.text = user.id
+
+
             tvUserName.text = user.name
 //            tvEmail.text = user.email
 //            tvPhone.text = user.phoneNumber
@@ -104,14 +173,6 @@ class ProfileFragment : Fragment() {
                     .error(R.mipmap.avatar_bear_default).into(ivProfile)
             }
         }
-    }
-
-    private fun logout() {
-        viewModel.logout()
-        val intent = Intent(requireContext(), AuthActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        requireActivity().finish()
     }
 
     override fun onDestroyView() {

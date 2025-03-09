@@ -1,15 +1,17 @@
 package com.healthtech.doccareplus.ui.auth.login
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.healthtech.doccareplus.data.local.preferences.UserPreferences
 import com.healthtech.doccareplus.domain.repository.AuthRepository
+import com.zegocloud.zimkit.services.ZIMKit
 import dagger.hilt.android.lifecycle.HiltViewModel
+import im.zego.zim.enums.ZIMErrorCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -28,8 +30,8 @@ class LoginViewModel @Inject constructor(
 
     fun login(email: String, password: String, rememberMe: Boolean) {
         if (_loginState.value is LoginState.Loading) {
-        return
-    }
+            return
+        }
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
             try {
@@ -37,6 +39,14 @@ class LoginViewModel @Inject constructor(
 
                 val result = authRepository.login(email, password, rememberMe)
                 if (result.isSuccess) {
+                    val user = userPreferences.getUser()
+                    
+                    if (user != null) {
+                        val userId = user.id.toString()
+                        val userName = user.name.ifEmpty { email.substringBefore('@') }
+                        connectToZegoCloud(userId, userName)
+                    }
+                    
                     _loginState.value = LoginState.Success
                 } else {
                     _loginState.value =
@@ -48,12 +58,25 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    fun updateRememberMe(isChecked: Boolean){
+    fun updateRememberMe(isChecked: Boolean) {
         userPreferences.saveRememberMe(isChecked)
         _rememberMeState.value = isChecked
     }
 
     fun resetLoginState() {
         _loginState.value = LoginState.Idle
+    }
+
+    private fun connectToZegoCloud(userId: String, userName: String) {
+        val avatarUrl = "https://storage.zego.im/IMKit/avatar/avatar-0.png"
+        
+        // Kết nối với ZegoCloud
+        ZIMKit.connectUser(userId, userName, avatarUrl) { error ->
+            if (error.code != ZIMErrorCode.SUCCESS) {
+                Log.e("LoginViewModel", "ZIMKit connect failed: ${error.message}")
+            } else {
+                Log.d("LoginViewModel", "ZIMKit connect success with userId: $userId")
+            }
+        }
     }
 }

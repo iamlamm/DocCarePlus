@@ -3,6 +3,7 @@ package com.healthtech.doccareplus.ui.home
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.common.base.BaseDataViewModel
 import com.healthtech.doccareplus.databinding.ActivityHomeBinding
@@ -86,23 +87,40 @@ class HomeViewModel @Inject constructor(
         binding.apply {
             tvUserName.text = user.name
 
-            // Chuẩn bị resource ID avatar dựa trên gender
-            val avatarResId = when (user.gender) {
-                Gender.MALE -> R.mipmap.avatar_male_default
-                Gender.FEMALE -> R.mipmap.avatar_female_default
-                else -> R.mipmap.avatar_bear_default
-            }
+//            // Chuẩn bị resource ID avatar dựa trên gender
+//            val avatarResId = when (user.gender) {
+//                Gender.MALE -> R.mipmap.avatar_male_default
+//                Gender.FEMALE -> R.mipmap.avatar_female_default
+//                else -> R.mipmap.avatar_bear_default
+//            }
+//
+//            // Trả về thông tin cần thiết để Activity/Fragment có thể load avatar
+//            if (user.avatar.isNullOrEmpty()) {
+//                // Sử dụng avatar mặc định
+//                ivUserAvatar.setImageResource(avatarResId)
+//            } else {
+//                // Để Activity/Fragment xử lý việc load ảnh
+//                // Glide.with(ivUserAvatar).load(user.avatar).error(avatarResId).into(ivUserAvatar)
+//                // Thay vào đó, chỉ set tag để sử dụng bên ngoài
+//                ivUserAvatar.tag = user.avatar
+//                ivUserAvatar.setImageResource(avatarResId) // Default trước khi load
+//            }
 
-            // Trả về thông tin cần thiết để Activity/Fragment có thể load avatar
-            if (user.avatar.isNullOrEmpty()) {
-                // Sử dụng avatar mặc định
-                ivUserAvatar.setImageResource(avatarResId)
+            if (!user.avatar.isNullOrEmpty()) {
+                Glide.with(binding.root.context)
+                    .load(user.avatar)
+                    .placeholder(R.mipmap.avatar_bear_default)
+                    .error(R.mipmap.avatar_bear_default)
+                    .circleCrop()
+                    .into(binding.ivUserAvatar)
             } else {
-                // Để Activity/Fragment xử lý việc load ảnh
-                // Glide.with(ivUserAvatar).load(user.avatar).error(avatarResId).into(ivUserAvatar)
-                // Thay vào đó, chỉ set tag để sử dụng bên ngoài
-                ivUserAvatar.tag = user.avatar
-                ivUserAvatar.setImageResource(avatarResId) // Default trước khi load
+                val avatarResId = when (user.gender) {
+                    Gender.MALE -> R.mipmap.avatar_male_default
+                    Gender.FEMALE -> R.mipmap.avatar_female_default
+                    else -> R.mipmap.avatar_bear_default
+                }
+                ivUserAvatar.tag = null
+                ivUserAvatar.setImageResource(avatarResId)
             }
         }
     }

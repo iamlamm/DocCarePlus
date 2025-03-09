@@ -19,6 +19,7 @@ import com.healthtech.doccareplus.common.state.UiState
 import com.healthtech.doccareplus.databinding.FragmentHomeBinding
 import com.healthtech.doccareplus.ui.home.adapter.CategoryAdapter
 import com.healthtech.doccareplus.ui.home.adapter.DoctorAdapter
+import com.healthtech.doccareplus.ui.widgets.decoration.CustomItemDecoration
 import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -130,11 +131,7 @@ class HomeFragment : BaseFragment() {
             adapter = doctorAdapter
             layoutManager =
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-            addItemDecoration(
-                DividerItemDecoration(
-                    requireContext(), DividerItemDecoration.VERTICAL
-                )
-            )
+            addItemDecoration(CustomItemDecoration(requireContext()))
         }
     }
 

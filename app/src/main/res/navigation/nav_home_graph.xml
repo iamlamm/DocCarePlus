@@ -31,6 +31,13 @@
             app:exitAnim="@anim/fade_out"
             app:popEnterAnim="@anim/fade_in"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_home_to_chat"
+            app:destination="@id/chatFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
     <fragment
         android:id="@+id/allCategoriesFragment"
@@ -52,12 +59,12 @@
         tools:layout="@layout/fragment_all_doctors">
         <argument
             android:name="categoryId"
-            app:argType="integer"
-            android:defaultValue="-1" />
+            android:defaultValue="-1"
+            app:argType="integer" />
         <argument
             android:name="categoryName"
-            app:argType="string"
             android:defaultValue="@null"
+            app:argType="string"
             app:nullable="true" />
         <action
             android:id="@+id/action_allDoctors_to_doctorProfile"
@@ -110,7 +117,15 @@
         android:id="@+id/profileFragment"
         android:name="com.healthtech.doccareplus.ui.profile.ProfileFragment"
         android:label="fragment_profile"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_editProfile"
+            app:destination="@id/editProfileFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 
     <fragment
         android:id="@+id/doctorProfileFragment"
@@ -121,12 +136,19 @@
             android:name="doctor"
             app:argType="com.healthtech.doccareplus.domain.model.Doctor" />
         <action
-            android:id="@+id/action_doctor_profile_to_success"
+            android:id="@+id/action_doctorProfile_to_success"
             app:destination="@id/successFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/fade_out"
             app:popUpTo="@id/doctorProfileFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_doctorProfile_to_chat"
+            app:destination="@id/chatFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -150,10 +172,10 @@
         tools:layout="@layout/fragment_notification">
         <action
             android:id="@+id/action_notification_to_previous"
-            app:popUpTo="@id/homeFragment"
-            app:popUpToInclusive="false"
             app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/slide_out_right" />
+            app:exitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <action
@@ -163,5 +185,59 @@
         app:exitAnim="@anim/fade_out"
         app:popEnterAnim="@anim/fade_in"
         app:popExitAnim="@anim/slide_out_right" />
+    <!--    <fragment-->
+    <!--        android:id="@+id/conversationsFragment"-->
+    <!--        android:name="com.healthtech.doccareplus.ui.chat.ConversationsFragment"-->
+    <!--        android:label="fragment_conversations"-->
+    <!--        tools:layout="@layout/fragment_conversations">-->
+    <!--        <action-->
+    <!--            android:id="@+id/action_conversations_to_chat"-->
+    <!--            app:destination="@id/chatFragment"-->
+    <!--            app:enterAnim="@anim/slide_in_right"-->
+    <!--            app:exitAnim="@anim/fade_out"-->
+    <!--            app:popEnterAnim="@anim/fade_in"-->
+    <!--            app:popExitAnim="@anim/slide_out_right" />-->
+    <!--    </fragment>-->
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.healthtech.doccareplus.ui.chat.ChatFragment"
+        android:label="ChatFragment"
+        tools:layout="@layout/fragment_chat">
+        <argument
+            android:name="conversationId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+        <argument
+            android:name="title"
+            app:argType="string"
+            android:defaultValue="Tin nhắn" />
+        <action
+            android:id="@+id/action_chat_to_previous"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_chat"
+        app:destination="@id/chatFragment"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/fade_out"
+        app:popEnterAnim="@anim/fade_in"
+        app:popExitAnim="@anim/slide_out_right" />
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.healthtech.doccareplus.ui.profile.editprofile.EditProfileFragment"
+        android:label="EditProfileFragment"
+        tools:layout="@layout/fragment_edit_profile">
+        <action
+            android:id="@+id/action_editProfile_to_previous"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/profileFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
 
 </navigation>

@@ -9,7 +9,7 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.50"
 //    id("kotlin-kapt")
     id("org.jetbrains.kotlin.kapt")
-    id ("kotlin-parcelize")
+    id("kotlin-parcelize")
 }
 
 
@@ -45,6 +45,16 @@ android {
 //            "\"${project.findProperty("EMAIL_PASSWORD") ?: ""}\""
 //        )
 
+//        buildConfigField(
+//            "String",
+//            "CLOUDINARY_API_KEY",
+//            "\"${project.properties["CLOUDINARY_API_KEY"]}\""
+//        )
+//        buildConfigField(
+//            "String",
+//            "CLOUDINARY_API_SECRET",
+//            "\"${project.properties["CLOUDINARY_API_SECRET"]}\""
+//        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -83,15 +93,41 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        dataBinding = true
     }
-//    buildFeatures {
-//        android.buildFeatures.buildConfig = true
+    buildFeatures {
+        android.buildFeatures.buildConfig = true
+    }
+//    configurations.all {
+//        exclude(group = "com.android.support", module = "support-compat")
 //    }
 }
 
 dependencies {
+//    implementation("com.cloudinary:kotlin-url-gen:1.7.0")
+    implementation("com.cloudinary:cloudinary-android:2.3.1")
+
+    implementation("com.github.ZEGOCLOUD:zego_inapp_chat_uikit_android:+")
+
+    implementation(libs.dexter)
+
+    // Hỗ trợ media
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+
+    // Timber
+    implementation(libs.timber)
+
+    implementation(libs.volley)
+
+//    // WebRTC dependencies
+//    implementation(libs.google.webrtc)
+
     // lottie
-    implementation (libs.lottie)
+    implementation(libs.lottie)
 
     implementation(libs.androidx.viewpager2)
     implementation(libs.material.v1110)
@@ -105,13 +141,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth.ktx)
-
-    // Mail
-    implementation(libs.android.mail)
-    implementation(libs.android.activation)
-
-    // Security
-    implementation(libs.androidx.security.crypto)
+    implementation(libs.firebase.messaging)
 
 
     implementation(libs.play.services.safetynet)
@@ -121,6 +151,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.activity.ktx)
+//    implementation(libs.androidx.lifecycle.viewmodel.ktx.v270)
+//    implementation(libs.androidx.lifecycle.livedata.ktx.v270)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Navigation
     implementation(libs.androidx.navigation.fragment.ktx)
@@ -141,9 +174,14 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.kotlinx.coroutines.core)
+
 
     // https://mvnrepository.com/artifact/com.github.bumptech.glide/glide
     implementation(libs.glide)
+
+    // Gson
+    implementation(libs.gson)
 
 
     // RecyclerView

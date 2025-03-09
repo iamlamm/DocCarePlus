@@ -16,6 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/white"
+            app:menu="@menu/doctor_profile_menu"
             app:navigationIcon="@drawable/custom_btn_back"
             app:title="Doctor Profile"
             app:titleCentered="true" />
@@ -103,38 +104,86 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Specialty Chips -->
-            <HorizontalScrollView
-                android:id="@+id/hsv_specialties"
-                android:layout_width="match_parent"
+
+            <!--            &lt;!&ndash; Specialty Chips &ndash;&gt;-->
+            <!--            <HorizontalScrollView-->
+            <!--                android:id="@+id/hsv_specialties"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_marginTop="16dp"-->
+            <!--                app:layout_constraintEnd_toEndOf="parent"-->
+            <!--                app:layout_constraintStart_toStartOf="parent"-->
+            <!--                app:layout_constraintTop_toBottomOf="@id/iv_doctor_avatar">-->
+
+            <!--                <com.google.android.material.chip.ChipGroup-->
+            <!--                    android:layout_width="wrap_content"-->
+            <!--                    android:layout_height="match_parent">-->
+
+            <!--                    <com.google.android.material.chip.Chip-->
+            <!--                        android:layout_width="wrap_content"-->
+            <!--                        android:layout_height="wrap_content"-->
+            <!--                        android:text="Neurologist"-->
+            <!--                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"-->
+            <!--                        android:textColor="@color/teal_green"-->
+            <!--                        app:chipBackgroundColor="@color/pale_aqua" />-->
+
+            <!--                    <com.google.android.material.chip.Chip-->
+            <!--                        android:layout_width="wrap_content"-->
+            <!--                        android:layout_height="wrap_content"-->
+            <!--                        android:text="Neuromedicine"-->
+            <!--                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"-->
+            <!--                        android:textColor="@color/warm_brown"-->
+            <!--                        android:textStyle="bold"-->
+            <!--                        app:chipBackgroundColor="@color/beige" />-->
+            <!--                </com.google.android.material.chip.ChipGroup>-->
+            <!--            </HorizontalScrollView>-->
+
+            <!-- UID Section -->
+            <TextView
+                android:id="@+id/tv_uid_title"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:text="Doctor ID"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/iv_doctor_avatar" />
+
+            <LinearLayout
+                android:id="@+id/doctor_uid_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_rounded_stroke_gray"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/iv_doctor_avatar">
+                app:layout_constraintTop_toBottomOf="@id/tv_uid_title">
 
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent">
+                <TextView
+                    android:id="@+id/tv_doctor_uid"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Doctor ID"
+                    android:textColor="@color/blue_gray_light"
+                    android:textIsSelectable="true"
+                    tools:text="abc123def456ghi789" />
 
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Neurologist"
-                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                        android:textColor="@color/teal_green"
-                        app:chipBackgroundColor="@color/pale_aqua" />
-
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Neuromedicine"
-                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                        android:textColor="@color/warm_brown"
-                        android:textStyle="bold"
-                        app:chipBackgroundColor="@color/beige" />
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
+                <ImageButton
+                    android:id="@+id/btn_copy_doctor_uid"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Copy Doctor ID"
+                    android:src="@drawable/ic_copy"
+                    app:tint="@color/steel_teal"
+                    tools:ignore="TouchTargetSizeCheck" />
+            </LinearLayout>
 
             <!-- Biography Section -->
             <TextView
@@ -147,7 +196,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/hsv_specialties" />
+                app:layout_constraintTop_toBottomOf="@+id/doctor_uid_container" />
 
             <TextView
                 android:id="@+id/tv_biography_content"
@@ -420,14 +469,14 @@
         android:id="@+id/loading_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:visibility="gone">
 
         <com.healthtech.doccareplus.ui.widgets.loading.LoadingView
             android:id="@+id/progress_bar_doctor_profile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"/>
+            android:layout_gravity="center" />
     </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

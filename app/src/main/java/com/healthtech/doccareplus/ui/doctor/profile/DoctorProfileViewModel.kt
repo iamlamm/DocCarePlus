@@ -188,4 +188,12 @@ class DoctorProfileViewModel @Inject constructor(
             }
         }
     }
+
+    fun initiateChatWithDoctor(doctorId: Int, doctorName: String) {
+        val doctorIdString = doctorId.toString()
+        
+        Log.d("DoctorProfileViewModel", "Starting chat with doctor: $doctorIdString, $doctorName")
+        
+        _state.value = DoctorProfileState.InitiateChat(doctorIdString, doctorName)
+    }
 }
