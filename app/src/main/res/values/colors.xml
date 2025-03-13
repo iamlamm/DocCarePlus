@@ -19,6 +19,7 @@
     <color name="white_40">#66FFFFFF</color>
     <color name="gray_light">#B3B3B3</color>
     <color name="blue_gray_light">#A0ADBB</color>
+    <color name="red1">#c0392b</color>
 
     <color name="pale_teal">#E8F3F1</color>
     <color name="teal">#2B8D7C</color>
@@ -41,4 +42,12 @@
 
     <color name="mic_button">#3498db</color>  <!-- Sử dụng màu xanh dương giống màu info -->
     <color name="speaker_button">#f39c12</color>  <!-- Sử dụng màu cam giống màu warning -->
+
+    <color name="unread_notification_bg">#F5F5F5</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_dark">#000000</color>
+
+
+
 </resources>

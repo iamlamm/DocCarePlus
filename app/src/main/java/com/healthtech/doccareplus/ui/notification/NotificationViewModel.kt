@@ -65,7 +65,12 @@ class NotificationViewModel @Inject constructor(
     fun markAsRead(notificationId: String) {
         viewModelScope.launch {
             try {
-                notificationService.markAsRead(notificationId)
+                val userId = userRepository.getCurrentUserId()
+                if (userId != null) {
+                    notificationService.markAsRead(notificationId, userId)
+                } else {
+                    _error.value = "Người dùng chưa đăng nhập"
+                }
             } catch (e: Exception) {
                 _error.value = e.message ?: "Đã xảy ra lỗi"
             }

@@ -1,6 +1,7 @@
 package com.healthtech.doccareplus.ui.doctor.profile
 
 import com.healthtech.doccareplus.domain.model.TimeSlot
+import com.stripe.android.paymentsheet.PaymentSheet
 import java.util.Date
 
 sealed class DoctorProfileState {
@@ -17,4 +18,14 @@ sealed class DoctorProfileState {
     data class Error(val message: String) : DoctorProfileState()
 
     data class InitiateChat(val doctorId: String, val doctorName: String) : DoctorProfileState()
+
+    object PaymentLoading : DoctorProfileState()
+    data class PaymentReady(
+        val paymentIntentClientSecret: String,
+        val customerConfig: PaymentSheet.CustomerConfiguration
+    ) : DoctorProfileState()
+
+    data class PaymentComplete(val appointmentId: String) : DoctorProfileState()
+    data class PaymentFailed(val error: String) : DoctorProfileState()
+    object PaymentCancelled : DoctorProfileState()
 }

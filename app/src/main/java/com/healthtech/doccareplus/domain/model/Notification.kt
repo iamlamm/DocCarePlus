@@ -5,7 +5,8 @@ data class Notification(
     val title: String = "",
     val message: String = "",
     val time: Long = 0,
-    val type: NotificationType = NotificationType.APPOINTMENT,
-    val userId: String = "",
-    val read: Boolean = false
+    val read: Boolean = false,
+    val type: NotificationType = NotificationType.APPOINTMENT_BOOKED,
+    val date: String = "",
+    val appointmentId: String = ""
 )

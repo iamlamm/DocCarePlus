@@ -34,7 +34,7 @@ class BookingServiceImpl @Inject constructor(
             }
 
             // 2. Kiểm tra slot có khả dụng không
-            when (val availability = checkSlotAvailability(
+            when (val availability = checkSlotAvailabilityInternal(
                 request.doctorId,
                 request.date,
                 request.slotId,
@@ -44,16 +44,35 @@ class BookingServiceImpl @Inject constructor(
                     // Tiếp tục quá trình đặt lịch
                     val appointmentId = createAppointment(request)
                     updateBookedSlots(request.doctorId, request.date, request.slotId)
-                    emit(Result.success(appointmentId))
-
-                    val notification = Notification(
+                    
+                    // Lấy thông tin tên bác sĩ
+                    val doctorRef = database.getReference("doctors/${request.doctorId}")
+                    val doctorSnapshot = doctorRef.get().await()
+                    val doctorName = doctorSnapshot.child("name").getValue(String::class.java) ?: "Bác sĩ"
+                    
+                    // Tạo thông báo cho user
+                    val userNotification = Notification(
                         title = "Đặt lịch thành công",
-                        message = "Bạn đã đặt lịch khám thành công. Mã cuộc hẹn: $appointmentId",
+                        message = "Bạn đã đặt lịch khám thành công với $doctorName. Mã cuộc hẹn: $appointmentId",
                         time = System.currentTimeMillis(),
-                        type = NotificationType.APPOINTMENT,
-                        userId = request.userId
+                        type = NotificationType.APPOINTMENT_BOOKED,
+                        date = request.date,
+                        appointmentId = appointmentId
                     )
-                    notificationService.createNotification(notification)
+                    notificationService.createUserNotification(userNotification, request.userId)
+                    
+                    // Tạo thông báo cho doctor
+                    val doctorNotification = Notification(
+                        title = "Lịch hẹn mới",
+                        message = "Bạn có lịch hẹn mới với bệnh nhân ${request.userName}. Mã cuộc hẹn: $appointmentId",
+                        time = System.currentTimeMillis(),
+                        type = NotificationType.NEW_APPOINTMENT,
+                        date = request.date,
+                        appointmentId = appointmentId
+                    )
+                    notificationService.createDoctorNotification(doctorNotification, request.doctorId)
+                    
+                    emit(Result.success(appointmentId))
                 }
 
                 is SlotAvailabilityResult.AlreadyBookedByCurrentUser -> {
@@ -74,37 +93,65 @@ class BookingServiceImpl @Inject constructor(
         }
     }
 
-    private suspend fun checkDoctorWorkingDay(doctorId: Int, date: String): Boolean {
+    override suspend fun checkSlotAvailability(
+        doctorId: String, 
+        date: String, 
+        slotId: Int, 
+        userId: String
+    ): Flow<Result<SlotAvailabilityResult>> = flow {
+        try {
+            // 1. Kiểm tra lịch làm việc của bác sĩ
+            val isWorkingDay = checkDoctorWorkingDay(doctorId, date)
+            if (!isWorkingDay) {
+                emit(Result.failure(Exception("Bác sĩ không làm việc vào ngày này")))
+                return@flow
+            }
+
+            // 2. Kiểm tra slot có khả dụng không
+            val availability = checkSlotAvailabilityInternal(doctorId, date, slotId, userId)
+            when (availability) {
+                is SlotAvailabilityResult.Available -> {
+                    emit(Result.success(availability))
+                }
+                is SlotAvailabilityResult.AlreadyBookedByCurrentUser -> {
+                    emit(Result.failure(Exception("Bạn đã đặt lịch khám vào khung giờ này")))
+                }
+                is SlotAvailabilityResult.AlreadyBookedByOther -> {
+                    emit(Result.failure(Exception("Khung giờ này đã có người đặt lịch")))
+                }
+                is SlotAvailabilityResult.Unavailable -> {
+                    emit(Result.failure(Exception("Bác sĩ không thể khám vào khung giờ này")))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("BookingService", "Error checking slot availability: ${e.message}")
+            emit(Result.failure(e))
+        }
+    }
+
+    private suspend fun checkDoctorWorkingDay(doctorId: String, date: String): Boolean {
         val calendar = Calendar.getInstance()
         calendar.time = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(date)!!
         val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK).toLowerCaseDayName()
-
-        val scheduleRef = database.getReference("doctorSchedules")
-            .orderByChild("doctorId")
-            .equalTo(doctorId.toDouble())
-
+        val scheduleRef = database.getReference("doctorSchedules").child(doctorId)
         val snapshot = scheduleRef.get().await()
-        return snapshot.children.firstOrNull()?.child("workingDays")
-            ?.children?.any { it.value.toString() == dayOfWeek } ?: false
+        return snapshot.child("workingDays")
+            .children.any { it.value.toString() == dayOfWeek }
     }
 
-    private suspend fun checkSlotAvailability(
-        doctorId: Int,
+    private suspend fun checkSlotAvailabilityInternal(
+        doctorId: String,
         date: String,
         slotId: Int,
         currentUserId: String
     ): SlotAvailabilityResult {
-        val scheduleRef = database.getReference("schedules")
-            .orderByChild("doctorId")
-            .equalTo(doctorId.toDouble())
+        val scheduleRef = database.getReference("schedules/byDoctor/$doctorId/$date")
 
-        val snapshot = scheduleRef.get().await()
-        val schedule = snapshot.children.firstOrNull {
-            it.child("date").value.toString() == date
-        }
+        val schedule = scheduleRef.get().await()
 
-        if (schedule == null) return SlotAvailabilityResult.Available
+        if (!schedule.exists()) return SlotAvailabilityResult.Available
 
+        // Kiểm tra unavailableSlots
         val unavailableSlots = schedule.child("unavailableSlots")
             .children.mapNotNull { it.value.toString().toIntOrNull() }
 
@@ -112,15 +159,14 @@ class BookingServiceImpl @Inject constructor(
             return SlotAvailabilityResult.Unavailable
         }
 
-        // Kiểm tra trong appointments để biết ai đã đặt slot này
-        val appointmentsRef = database.getReference("appointments")
-            .orderByChild("doctorId")
-            .equalTo(doctorId.toDouble())
+        // Kiểm tra cuộc hẹn theo cấu trúc mới
+        val appointmentsRef = database.getReference("appointments/byDoctor/$doctorId")
+            .orderByChild("date")
+            .equalTo(date)
 
         val appointmentsSnapshot = appointmentsRef.get().await()
         val existingAppointment = appointmentsSnapshot.children.firstOrNull {
-            it.child("date").value.toString() == date &&
-                    it.child("slotId").value.toString().toInt() == slotId
+            it.child("slotId").value.toString().toInt() == slotId
         }
 
         return when {
@@ -133,13 +179,10 @@ class BookingServiceImpl @Inject constructor(
     }
 
     private suspend fun createAppointment(request: BookingRequest): String {
-        val appointmentsRef = database.getReference("appointments")
-
-        // Lấy key từ Firebase
-        val newKey = appointmentsRef.push().key!!
+        val appointmentKey = database.getReference("appointments/details").push().key!!
 
         val appointment = hashMapOf(
-            "id" to newKey,
+            "id" to appointmentKey,
             "doctorId" to request.doctorId,
             "userId" to request.userId,
             "date" to request.date,
@@ -148,36 +191,55 @@ class BookingServiceImpl @Inject constructor(
             "createdAt" to ServerValue.TIMESTAMP
         )
 
-        appointmentsRef.child(newKey).setValue(appointment).await()
-        return newKey
+        // Lưu vào 3 nơi khác nhau theo cấu trúc mới
+        val updates = hashMapOf<String, Any>(
+            // Chi tiết cuộc hẹn
+            "appointments/details/$appointmentKey" to appointment,
+
+            // Theo bác sĩ
+            "appointments/byDoctor/${request.doctorId}/$appointmentKey" to appointment,
+
+            // Theo người dùng
+            "appointments/byUser/${request.userId}/$appointmentKey" to appointment,
+
+            // Theo ngày
+            "appointments/byDate/${request.date}/$appointmentKey" to true
+        )
+
+        database.reference.updateChildren(updates).await()
+        return appointmentKey
     }
 
-    private suspend fun updateBookedSlots(doctorId: Int, date: String, slotId: Int) {
-        val scheduleRef = database.getReference("schedules")
-            .orderByChild("doctorId")
-            .equalTo(doctorId.toDouble())
+    private suspend fun updateBookedSlots(doctorId: String, date: String, slotId: Int) {
+        val scheduleRef = database.getReference("schedules/byDoctor/$doctorId/$date")
 
-        val snapshot = scheduleRef.get().await()
-        val schedule = snapshot.children.firstOrNull {
-            it.child("date").value.toString() == date
-        }
+        val schedule = scheduleRef.get().await()
 
-        if (schedule != null) {
-            // Thêm slot vào bookedSlots
-            schedule.ref.child("bookedSlots").push().setValue(slotId).await()
+        if (schedule.exists()) {
+            // Thêm slot vào bookedSlots theo cấu trúc mới
+            scheduleRef.child("bookedSlots").push().setValue(slotId).await()
         } else {
             // Tạo schedule mới nếu chưa có
             val newSchedule = hashMapOf(
                 "doctorId" to doctorId,
                 "date" to date,
                 "unavailableSlots" to listOf<Int>(),
-                "bookedSlots" to listOf(slotId)
+                "bookedSlots" to hashMapOf<String, Int>()
             )
-            // Sửa lại cách push và set giá trị
-            database.getReference("schedules")
-                .push()
+
+            // Đặt schedule theo cấu trúc mới
+            database.getReference("schedules/byDoctor/$doctorId/$date")
                 .setValue(newSchedule)
                 .await()
+
+            // Thêm vào chỉ mục byDate
+            database.getReference("schedules/byDate/$date/$doctorId")
+                .setValue(true)
+                .await()
+
+            // Sau đó cập nhật bookedSlots
+            database.getReference("schedules/byDoctor/$doctorId/$date/bookedSlots")
+                .push().setValue(slotId).await()
         }
     }
 

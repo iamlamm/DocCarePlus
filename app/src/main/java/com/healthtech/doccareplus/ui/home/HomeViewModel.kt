@@ -41,6 +41,10 @@ class HomeViewModel @Inject constructor(
     private val _unreadNotificationCount = MutableStateFlow(0)
     val unreadNotificationCount: StateFlow<Int> = _unreadNotificationCount
 
+    // Lưu ID cuộc hẹn được chọn từ thông báo
+    private val _selectedAppointmentId = MutableStateFlow<String?>(null)
+    val selectedAppointmentId = _selectedAppointmentId.asStateFlow()
+
     init {
         // Khởi động tải dữ liệu ngay khi ViewModel được tạo
         observeData()
@@ -202,5 +206,34 @@ class HomeViewModel @Inject constructor(
             visibility = if (count > 0) View.VISIBLE else View.GONE
             text = if (count > 99) "99+" else count.toString()
         }
+    }
+
+    fun markNotificationAsRead(notificationId: String) {
+        viewModelScope.launch {
+            try {
+                // Lấy ID người dùng hiện tại
+                val userId = currentUser.value?.id ?: return@launch
+                
+                // Gọi service để đánh dấu thông báo đã đọc
+                notificationService.markAsRead(userId, notificationId)
+                
+                // Cập nhật lại số lượng thông báo chưa đọc
+                refreshUnreadNotifications()
+            } catch (e: Exception) {
+                // Xử lý lỗi nếu cần
+                Log.e("HomeViewModel", "Error marking notification as read", e)
+            }
+        }
+    }
+
+    // Thêm phương thức refresh nếu chưa có
+    fun refreshUnreadNotifications() {
+        viewModelScope.launch {
+            observeUnreadNotifications()
+        }
+    }
+
+    fun setSelectedAppointmentId(id: String) {
+        _selectedAppointmentId.value = id
     }
 }

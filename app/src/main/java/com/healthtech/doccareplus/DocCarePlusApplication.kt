@@ -3,8 +3,10 @@ package com.healthtech.doccareplus
 import android.app.Application
 import android.content.Context
 import com.cloudinary.android.MediaManager
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.ktx.initialize
+import com.google.firebase.FirebaseApp
+//import com.google.firebase.Firebase
+//import com.google.firebase.database.database
+//import com.google.firebase.initialize
 import com.healthtech.doccareplus.utils.Constants
 import com.zegocloud.zimkit.services.ZIMKit
 import com.zegocloud.zimkit.services.ZIMKitConfig
@@ -19,8 +21,9 @@ class DocCarePlusApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Firebase.initialize(this)
-//        Firebase.database.setPersistenceEnabled
+        FirebaseApp.initializeApp(this)
+//        Firebase.initialize(this)
+//        Firebase.database.setPersistenceEnabled(true)
         Timber.plant(Timber.DebugTree())
         configureZegoCloud()
         configureCloudinary()

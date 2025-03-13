@@ -1,7 +1,13 @@
 package com.healthtech.doccareplus.ui.home
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -9,8 +15,10 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.ActivityHomeBinding
+import com.healthtech.doccareplus.utils.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -25,8 +33,15 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Kiểm tra và yêu cầu quyền thông báo
+        checkAndRequestNotificationPermission()
+
         // Khởi tạo navigation controller
         setupNavController()
+
+
+        // Xử lý thông báo nếu mở từ notification
+        handleNotificationIntent(intent)
 
         // Sử dụng thread khác để khởi tạo UI không quan trọng
         lifecycleScope.launch(Dispatchers.Default) {
@@ -46,6 +61,66 @@ class HomeActivity : AppCompatActivity() {
                 observeCurrentUser()
                 observerNotificationBadge()
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Cập nhật intent hiện tại
+        setIntent(intent)
+        // Xử lý notification intent nếu có
+        handleNotificationIntent(intent)
+    }
+
+    private fun handleNotificationIntent(intent: Intent) {
+        try {
+            // Xử lý thông báo thông thường
+            if (intent.getBooleanExtra("OPEN_NOTIFICATIONS", false)) {
+                val notificationId = intent.getStringExtra("NOTIFICATION_ID")
+                if (notificationId != null) {
+                    try {
+                        viewModel.markNotificationAsRead(notificationId)
+                    } catch (e: Exception) {
+                        Log.e("HomeActivity", "Error marking notification as read", e)
+                    }
+                }
+
+                // Đảm bảo NavController đã khởi tạo trước khi điều hướng
+                if (::navController.isInitialized) {
+                    navController.navigate(R.id.notificationFragment)
+                } else {
+                    // Lưu lại action để thực hiện sau khi NavController khởi tạo
+                    lifecycleScope.launch {
+                        delay(300) // Đợi một chút để NavController khởi tạo
+                        if (::navController.isInitialized) {
+                            navController.navigate(R.id.notificationFragment)
+                        }
+                    }
+                }
+            }
+
+            // Xử lý mở chi tiết cuộc hẹn - Điều hướng đến màn hình thích hợp
+            if (intent.getBooleanExtra("OPEN_APPOINTMENT_DETAIL", false)) {
+                val appointmentId = intent.getStringExtra("APPOINTMENT_ID")
+                if (appointmentId != null && ::navController.isInitialized) {
+                    // Vì không có appointmentFragment, điều hướng đến màn hình thích hợp
+                    // Ví dụ: Điều hướng đến màn hình lịch
+                    navController.navigate(R.id.homeFragment)  // Hoặc màn hình lịch nếu có
+
+                    // Lưu ID cuộc hẹn để fragment có thể truy cập
+                    viewModel.setSelectedAppointmentId(appointmentId)
+
+                    // Hiển thị thông báo cho người dùng
+                    Toast.makeText(
+                        this,
+                        "Đang mở thông tin cuộc hẹn: $appointmentId",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Error handling notification intent", e)
+            Toast.makeText(this, "Có lỗi xảy ra khi mở thông báo", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -193,20 +268,38 @@ class HomeActivity : AppCompatActivity() {
         binding.fabCalendar.visibility = View.VISIBLE
     }
 
-//    override fun onBackPressed() {
-//        if (navController.currentDestination?.id == R.id.homeFragment) {
-//            // Nếu đang ở Home Fragment, thoát app
-//            finish()
-//        } else if (navController.currentDestination?.id in listOf(
-//                R.id.allDoctorsFragment,
-//                R.id.moreFragment
-//            )
-//        ) {
-//            // Nếu đang ở các tab bottom nav, quay về Home
-//            navController.navigate(R.id.action_global_home)
-//        } else {
-//            // Các trường hợp khác, thực hiện back bình thường
-//            super.onBackPressed()
-//        }
-//    }
+    private fun checkAndRequestNotificationPermission() {
+        // Kiểm tra phiên bản Android 13 (Tiramisu) trở lên
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!PermissionManager.hasNotificationPermission(this)) {
+                PermissionManager.requestNotificationPermissions(this)
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when (requestCode) {
+            PermissionManager.NOTIFICATION_PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.d("Permissions", "Notification permission granted")
+                    // Cập nhật UI nếu cần
+                } else {
+                    Log.d("Permissions", "Notification permission denied")
+                    Toast.makeText(
+                        this,
+                        "Bạn sẽ không nhận được thông báo về lịch hẹn",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
 }

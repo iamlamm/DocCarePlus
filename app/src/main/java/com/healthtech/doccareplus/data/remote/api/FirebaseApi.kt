@@ -10,6 +10,7 @@ import com.healthtech.doccareplus.domain.model.Doctor
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.domain.model.TimeSlot
 import com.healthtech.doccareplus.domain.model.TimePeriod
+import com.healthtech.doccareplus.domain.model.UserRole
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -65,28 +66,138 @@ class FirebaseApi @Inject constructor(
         val doctorsRef = database.getReference("doctors")
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val doctorList = mutableListOf<Doctor>()
-                for (doctorSnapshot in snapshot.children) {
-                    doctorSnapshot.getValue(Doctor::class.java)?.let { doctor ->
-                        doctorList.add(doctor)
+                try {
+                    val doctorList = snapshot.children.mapNotNull { doctorSnapshot ->
+                        val doctorId = doctorSnapshot.key ?: return@mapNotNull null
+                        try {
+                            Doctor(
+                                id = doctorId,
+                                code = doctorSnapshot.child("code").getValue(String::class.java) ?: "",
+                                name = doctorSnapshot.child("name").getValue(String::class.java) ?: "",
+                                specialty = doctorSnapshot.child("specialty").getValue(String::class.java) ?: "",
+                                categoryId = doctorSnapshot.child("categoryId").getValue(Long::class.java)?.toInt() ?: 0,
+                                rating = doctorSnapshot.child("rating").getValue(Double::class.java)?.toFloat() ?: 0F,
+                                reviews = doctorSnapshot.child("reviews").getValue(Long::class.java) ?: 0L,
+                                fee = doctorSnapshot.child("fee").getValue(Double::class.java) ?: 0.0,
+                                avatar = doctorSnapshot.child("avatar").getValue(String::class.java) ?: "",
+                                available = doctorSnapshot.child("available").getValue(Boolean::class.java) ?: true,
+                                biography = doctorSnapshot.child("biography").getValue(String::class.java) ?: "",
+                                role = try {
+                                    val roleString = doctorSnapshot.child("role").getValue(String::class.java) ?: "DOCTOR"
+                                    UserRole.valueOf(roleString)
+                                } catch (e: Exception) {
+                                    UserRole.DOCTOR
+                                },
+                                email = doctorSnapshot.child("email").getValue(String::class.java) ?: "",
+                                phoneNumber = doctorSnapshot.child("phoneNumber").getValue(String::class.java) ?: "",
+                                emergencyContact = doctorSnapshot.child("emergencyContact").getValue(String::class.java) ?: "",
+                                address = doctorSnapshot.child("address").getValue(String::class.java) ?: ""
+                            )
+                        } catch (e: Exception) {
+                            Log.e("FirebaseApi", "Error parsing doctor $doctorId: ${e.message}")
+                            null
+                        }
                     }
+
+                    trySend(doctorList)
+                } catch (e: Exception) {
+                    Log.e("FirebaseApi", "Error processing doctors data: ${e.message}")
+                    trySend(emptyList())
                 }
-                // Gửi danh sách doctor mới vào Flow
-                trySend(doctorList)
             }
 
             override fun onCancelled(error: DatabaseError) {
                 Log.e("ERROR LOADING DOCTOR", error.message)
+                close(error.toException())
             }
         }
-        // Đăng ký listener với Firebase
+
         doctorsRef.addValueEventListener(listener)
-        // Khi Flow bị hủy, remove listener để tránh memory leak
-        awaitClose {
-            doctorsRef.removeEventListener(listener)
-            println("Flow getDoctors đóng")
-        }
+        awaitClose { doctorsRef.removeEventListener(listener) }
     }
+
+    // Thêm vào FirebaseApi.kt
+//    fun getDoctorSchedule(doctorId: String, date: String): Flow<Result<DoctorSchedule>> = callbackFlow {
+//        val scheduleRef = database.getReference("schedules/byDoctor/$doctorId/$date")
+//        val listener = object : ValueEventListener {
+//            override fun onDataChange(snapshot: DataSnapshot) {
+//                if (!snapshot.exists()) {
+//                    trySend(Result.failure(Exception("No schedule found")))
+//                    return
+//                }
+//
+//                try {
+//                    // Parse bookedSlots theo cấu trúc mới (object)
+//                    val bookedSlots = mutableListOf<Int>()
+//                    snapshot.child("bookedSlots").children.forEach { slotSnapshot ->
+//                        val slotId = slotSnapshot.value.toString().toIntOrNull()
+//                        if (slotId != null) bookedSlots.add(slotId)
+//                    }
+//
+//                    // Parse unavailableSlots
+//                    val unavailableSlots = mutableListOf<Int>()
+//                    snapshot.child("unavailableSlots").children.forEach { slotSnapshot ->
+//                        val slotId = slotSnapshot.value.toString().toIntOrNull()
+//                        if (slotId != null) unavailableSlots.add(slotId)
+//                    }
+//
+//                    val schedule = DoctorSchedule(
+//                        doctorId = doctorId,
+//                        date = date,
+//                        bookedSlots = bookedSlots,
+//                        unavailableSlots = unavailableSlots
+//                    )
+//
+//                    trySend(Result.success(schedule))
+//                } catch (e: Exception) {
+//                    trySend(Result.failure(e))
+//                }
+//            }
+//
+//            override fun onCancelled(error: DatabaseError) {
+//                trySend(Result.failure(error.toException()))
+//            }
+//        }
+//
+//        scheduleRef.addValueEventListener(listener)
+//        awaitClose { scheduleRef.removeEventListener(listener) }
+//    }
+//
+//    // Thêm vào FirebaseApi.kt
+//    fun getUserAppointments(userId: String): Flow<List<Appointment>> = callbackFlow {
+//        val appointmentsRef = database.getReference("appointments/byUser/$userId")
+//        val listener = object : ValueEventListener {
+//            override fun onDataChange(snapshot: DataSnapshot) {
+//                val appointments = snapshot.children.mapNotNull { appointmentSnapshot ->
+//                    try {
+//                        // Parse từng field của appointment
+//                        val appointment = Appointment(
+//                            id = appointmentSnapshot.child("id").value.toString(),
+//                            doctorId = appointmentSnapshot.child("doctorId").value.toString(),
+//                            userId = appointmentSnapshot.child("userId").value.toString(),
+//                            date = appointmentSnapshot.child("date").value.toString(),
+//                            slotId = appointmentSnapshot.child("slotId").value.toString().toIntOrNull() ?: 0,
+//                            status = appointmentSnapshot.child("status").value.toString(),
+//                            symptoms = appointmentSnapshot.child("symptoms").value?.toString(),
+//                            notes = appointmentSnapshot.child("notes").value?.toString()
+//                        )
+//                        appointment
+//                    } catch (e: Exception) {
+//                        Log.e("FirebaseApi", "Error parsing appointment: ${e.message}")
+//                        null
+//                    }
+//                }
+//                trySend(appointments)
+//            }
+//
+//            override fun onCancelled(error: DatabaseError) {
+//                close(error.toException())
+//            }
+//        }
+//
+//        appointmentsRef.addValueEventListener(listener)
+//        awaitClose { appointmentsRef.removeEventListener(listener) }
+//    }
 
     fun observeUser(userId: String): Flow<Result<User>> = callbackFlow {
         val userRef = database.getReference("users").child(userId)
@@ -147,8 +258,10 @@ class FirebaseApi @Inject constructor(
                         try {
                             val id = slotSnapshot.child("id").getValue(Int::class.java)
                             val startTime =
-                                slotSnapshot.child("startTime").getValue(String::class.java)
-                            val endTime = slotSnapshot.child("endTime").getValue(String::class.java)
+                                slotSnapshot.child("startTime")
+                                    .getValue(String::class.java)
+                            val endTime = slotSnapshot.child("endTime")
+                                .getValue(String::class.java)
 
                             if (id == null || startTime == null || endTime == null) {
                                 Log.e(
@@ -197,7 +310,11 @@ class FirebaseApi @Inject constructor(
         }
     }
 
-    suspend fun updateUserField(userId: String, fieldName: String, fieldValue: Any): Result<Unit> {
+    suspend fun updateUserField(
+        userId: String,
+        fieldName: String,
+        fieldValue: Any
+    ): Result<Unit> {
         return try {
             val userRef = database.getReference("users").child(userId)
             val updates = hashMapOf<String, Any>(fieldName to fieldValue)

@@ -54,7 +54,7 @@ class DoctorAdapter : RecyclerView.Adapter<DoctorAdapter.DoctorViewHolder>() {
                     .error(R.drawable.doctor)
 
                 // Load ảnh với cấu hình đã tối ưu
-                Glide.with(root.context).load(doctor.image).apply(requestOptions)
+                Glide.with(root.context).load(doctor.avatar).apply(requestOptions)
                     .into(ivDoctorAvatar)
 
                 // Click vào card bác sĩ

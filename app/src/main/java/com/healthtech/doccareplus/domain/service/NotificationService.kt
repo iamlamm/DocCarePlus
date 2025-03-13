@@ -4,9 +4,13 @@ import com.healthtech.doccareplus.domain.model.Notification
 import kotlinx.coroutines.flow.Flow
 
 interface NotificationService {
-    suspend fun createNotification(notification: Notification)
-
+    // Tạo thông báo cho user và doctor
+    suspend fun createUserNotification(notification: Notification, userId: String): Result<String>
+    suspend fun createDoctorNotification(notification: Notification, doctorId: String): Result<String>
+    
+    // Lắng nghe thông báo của user
     fun observeNotifications(userId: String): Flow<Result<List<Notification>>>
-
-    suspend fun markAsRead(notificationId: String)
+    
+    // Đánh dấu đã đọc
+    suspend fun markAsRead(notificationId: String, userId: String): Result<Unit>
 }

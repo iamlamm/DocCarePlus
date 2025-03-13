@@ -56,7 +56,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:ellipsize="end"
-        android:maxLines="3"
+        android:maxLines="4"
         android:text="Eion Morgan is a dedicated pediatrician with over 15 years..."
         android:textColor="@color/gray"
         android:textSize="14sp"

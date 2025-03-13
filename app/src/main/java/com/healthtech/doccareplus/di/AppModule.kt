@@ -2,7 +2,9 @@ package com.healthtech.doccareplus.di
 
 import android.content.Context
 import android.net.ConnectivityManager
+import com.healthtech.doccareplus.data.remote.api.PaymentApiClient
 import com.healthtech.doccareplus.utils.NetworkUtils
+import com.healthtech.doccareplus.utils.NotificationHelper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -118,5 +120,17 @@ object AppModule {
     @Singleton
     fun provideNetworkUtils(connectivityManager: ConnectivityManager): NetworkUtils {
         return NetworkUtils(connectivityManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationHelper(@ApplicationContext context: Context): NotificationHelper {
+        return NotificationHelper(context)
+    }
+
+    @Provides
+    @Singleton
+    fun providePaymentApiClient(@ApplicationContext context: Context): PaymentApiClient {
+        return PaymentApiClient(context)
     }
 }

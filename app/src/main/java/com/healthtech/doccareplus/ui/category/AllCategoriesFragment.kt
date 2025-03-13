@@ -257,8 +257,7 @@ class AllCategoriesFragment : BaseFragment() {
         }
 
         if (::allCategoriesAdapter.isInitialized &&
-            allCategoriesAdapter.itemCount == 0 &&
-            binding.rcvAllCategories != null
+            allCategoriesAdapter.itemCount == 0
         ) {
 
             // Làm mới dữ liệu khi quay lại fragment

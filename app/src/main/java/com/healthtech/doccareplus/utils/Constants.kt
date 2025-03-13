@@ -11,4 +11,9 @@ object Constants {
     const val CLOUDINARY_API_KEY = "656698752728255"
     const val CLOUDINARY_API_SECRET = "X84MgryT5lvKJdfSfjoQeOo7uXY"
     const val CLOUDINARY_FOLDER_STORE_AVATAR = "doccareplus_avatars"
+
+    const val STRIPE_PUBLISHABLE_KEY =
+        "pk_test_51R23x4KkAysrBYlnA78x75l1mJmUL64GBerzqgd5LTzPzm6J01buqWryUXitfqEn6dEutdH02QMnoqpTUyzoz0tI00DODh1lf3"
+
+    const val BACKEND_URL = "http://192.168.136.102:3000"
 }

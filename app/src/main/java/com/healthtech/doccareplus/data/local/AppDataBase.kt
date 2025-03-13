@@ -115,7 +115,8 @@ Hy vọng rằng với phần giải thích trên, bạn đã có cái nhìn rõ
 
 @Database(
     entities = [CategoryEntity::class, DoctorEntity::class, TimeSlotEntity::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 @TypeConverters(TimePeriodConverter::class)
 abstract class AppDataBase : RoomDatabase() {

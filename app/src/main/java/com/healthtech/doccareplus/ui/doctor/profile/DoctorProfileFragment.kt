@@ -33,6 +33,10 @@ import com.healthtech.doccareplus.utils.SnackbarUtils
 import com.healthtech.doccareplus.utils.showErrorDialog
 import com.healthtech.doccareplus.utils.showInfoDialog
 import androidx.activity.OnBackPressedCallback
+import com.healthtech.doccareplus.utils.Constants
+import com.stripe.android.PaymentConfiguration
+import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.zegocloud.zimkit.common.ZIMKitRouter
 import com.zegocloud.zimkit.common.enums.ZIMKitConversationType
 
@@ -43,9 +47,16 @@ class DoctorProfileFragment : Fragment() {
     private val args: DoctorProfileFragmentArgs by navArgs()
     private val viewModel: DoctorProfileViewModel by viewModels()
     private lateinit var calendarAdapter: CalendarAdapter
+    private lateinit var paymentSheet: PaymentSheet
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Khởi tạo Stripe SDK
+        PaymentConfiguration.init(requireContext(), Constants.STRIPE_PUBLISHABLE_KEY)
+
+        // Khởi tạo PaymentSheet
+        paymentSheet = PaymentSheet(this, ::onPaymentSheetResult)
         
         // Xử lý nút back
         requireActivity().onBackPressedDispatcher.addCallback(
@@ -68,6 +79,12 @@ class DoctorProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // First thing - set the doctor ID
+        val doctor = args.doctor
+        viewModel.setDoctorId(doctor.id.toString())
+        Log.d("DoctorProfileFragment", "Set doctor ID: ${doctor.id}")
+        
         binding.rvCalendar.isNestedScrollingEnabled = false
         setupViews()
         setupTimeSlotChips()
@@ -178,6 +195,38 @@ class DoctorProfileFragment : Fragment() {
                     title = state.doctorName
                 )
                 findNavController().navigate(action)
+            }
+
+            is DoctorProfileState.PaymentLoading -> {
+                showLoading()
+                binding.btnBookAppointment.isEnabled = false
+            }
+            
+            is DoctorProfileState.PaymentReady -> {
+                hideLoading()
+                presentPaymentSheet(state.paymentIntentClientSecret, state.customerConfig)
+            }
+            
+            is DoctorProfileState.PaymentComplete -> {
+                hideLoading()
+                binding.btnBookAppointment.isEnabled = true
+                showBookingSuccess(state.appointmentId)
+                // Navigate to appointment detail or confirmation screen
+                findNavController().navigate(
+                    DoctorProfileFragmentDirections.actionDoctorProfileToSuccess(state.appointmentId)
+                )
+            }
+            
+            is DoctorProfileState.PaymentFailed -> {
+                hideLoading()
+                binding.btnBookAppointment.isEnabled = true
+                showErrorDialog(message = state.error)
+            }
+            
+            is DoctorProfileState.PaymentCancelled -> {
+                hideLoading()
+                binding.btnBookAppointment.isEnabled = true
+                Snackbar.make(binding.root, getString(R.string.payment_cancelled), Snackbar.LENGTH_SHORT).show()
             }
         }
     }
@@ -368,7 +417,7 @@ class DoctorProfileFragment : Fragment() {
             tvDoctorReviewCount.text = "(${args.doctor.reviews})"
 
             Glide.with(requireContext())
-                .load(args.doctor.image)
+                .load(args.doctor.avatar)
                 .placeholder(R.drawable.doctor)
                 .error(R.drawable.doctor)
                 .into(ivDoctorAvatar)
@@ -477,8 +526,25 @@ class DoctorProfileFragment : Fragment() {
 
     private fun setupBookingButton() {
         binding.btnBookAppointment.setOnClickListener {
-            viewModel.bookAppointment(args.doctor.id)
+            val doctor = args.doctor
+            // Kiểm tra slot availability trước khi thanh toán
+            viewModel.setupBooking(doctor.id.toString(), doctor.fee)
         }
+    }
+
+    private fun onPaymentSheetResult(paymentSheetResult: PaymentSheetResult) {
+        viewModel.handlePaymentResult(paymentSheetResult)
+    }
+
+    private fun presentPaymentSheet(clientSecret: String, customerConfig: PaymentSheet.CustomerConfiguration) {
+        paymentSheet.presentWithPaymentIntent(
+            clientSecret,
+            PaymentSheet.Configuration(
+                merchantDisplayName = "DocCarePlus",
+                customer = customerConfig,
+                allowsDelayedPaymentMethods = true
+            )
+        )
     }
 
     override fun onDestroyView() {

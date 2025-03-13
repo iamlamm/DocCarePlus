@@ -30,33 +30,55 @@ class NotificationAdapter :
 
         fun bind(notification: Notification) {
             binding.apply {
-//                // Thay đổi background dựa trên trạng thái đọc
-//                root.setBackgroundResource(
-//                    if (notification.read)
-//                        R.color.white
-//                    else
-//                        R.color.gray
-//                )
-//
-//                // Thay đổi style text title
-//                tvNotificationTitle.apply {
-//                    setTypeface(null, if (notification.read) Typeface.NORMAL else Typeface.BOLD)
-//                }
+                // Thay đổi background dựa trên trạng thái đọc
+                root.setBackgroundResource(
+                    if (notification.read)
+                        R.color.white
+                    else
+                        R.color.unread_notification_bg
+                )
 
+                // Thay đổi style text title và message
+                tvNotificationTitle.apply {
+                    setTypeface(null, if (notification.read) Typeface.NORMAL else Typeface.BOLD)
+                    setTextColor(
+                        context.getColor(
+                            if (notification.read) R.color.text_primary
+                            else R.color.text_dark
+                        )
+                    )
+                }
+
+                tvNotificationMessage.apply {
+                    setTextColor(
+                        context.getColor(
+                            if (notification.read) R.color.text_secondary
+                            else R.color.text_primary
+                        )
+                    )
+                }
+
+                // Nội dung thông báo
                 tvNotificationTitle.text = notification.title
                 tvNotificationMessage.text = notification.message
                 tvNotificationTime.text = notification.time.getTimeAgo()
-                
-                // Set icon dựa vào type
-                ivNotificationIcon.setImageResource(
-                    when (notification.type) {
-                        NotificationType.APPOINTMENT -> R.drawable.calendar_menu
-                        NotificationType.SYSTEM -> R.drawable.ic_info
-                        NotificationType.REMINDER -> R.drawable.notification
-                    }
-                )
 
-                // Thêm click listener để đánh dấu là đã đọc
+                // Icon thông báo
+                ivNotificationIcon.apply {
+                    setImageResource(
+                        when (notification.type) {
+                            NotificationType.APPOINTMENT_BOOKED -> R.drawable.calendar_menu
+                            NotificationType.NEW_APPOINTMENT -> R.drawable.calendar_menu
+                            NotificationType.APPOINTMENT_CANCELLED -> R.drawable.ic_cancel
+                            NotificationType.APPOINTMENT_REMINDER -> R.drawable.notification
+                            NotificationType.SYSTEM -> R.drawable.ic_info
+                        }
+                    )
+                    // Thay đổi alpha của icon nếu đã đọc
+                    alpha = if (notification.read) 0.7f else 1.0f
+                }
+
+                // Click listener
                 root.setOnClickListener {
                     if (!notification.read) {
                         onNotificationClick?.invoke(notification.id)

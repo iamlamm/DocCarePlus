@@ -93,4 +93,10 @@
     <string name="change_email">Thay đổi email</string>
     <string name="current_password">Mật khẩu hiện tại</string>
     <string name="new_email">Email mới</string>
+    
+    <string name="payment_success">Thanh toán thành công!</string>
+    <string name="payment_failed">Thanh toán thất bại: %s</string>
+    <string name="payment_processing">Đang xử lý thanh toán...</string>
+    <string name="payment_cancelled">Thanh toán đã bị hủy</string>
+    <string name="proceed_to_payment">Tiến hành thanh toán</string>
 </resources>

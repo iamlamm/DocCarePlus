@@ -2,12 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
-//    id("com.google.devtools.ksp") version "2.0.21-1.0.27"
-//    id("com.google.devtools.ksp") version "1.9.22-1.0.17"
-//    id("com.google.devtools.ksp")
+    id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs.kotlin")
-    id("com.google.dagger.hilt.android") version "2.50"
-//    id("kotlin-kapt")
+//    id("com.google.dagger.hilt.android") version "2.50"
+    id("com.google.dagger.hilt.android")
     id("org.jetbrains.kotlin.kapt")
     id("kotlin-parcelize")
 }
@@ -99,42 +97,57 @@ android {
         android.buildFeatures.buildConfig = true
     }
 //    configurations.all {
-//        exclude(group = "com.android.support", module = "support-compat")
+//        resolutionStrategy {
+//            force("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.7.0")
+//            force("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+//            force("org.jetbrains.kotlin:kotlin-stdlib-common:1.9.22")
+//        }
+//    }
+//    configurations.all {
+//        resolutionStrategy {
+//            force("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.7.0")
+//        }
 //    }
 }
 
 dependencies {
-//    implementation("com.cloudinary:kotlin-url-gen:1.7.0")
-    implementation("com.cloudinary:cloudinary-android:2.3.1")
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.7.0")
+            force("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+            force("org.jetbrains.kotlin:kotlin-stdlib-common:1.9.22")
+        }
+    }
 
+    implementation ("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.7.0")
+    // Stripe
+    implementation(libs.stripe.android)
+    // Cloudinary
+    implementation(libs.cloudinary.android)
+    // ZegoCloud
     implementation("com.github.ZEGOCLOUD:zego_inapp_chat_uikit_android:+")
-
+    // Dexter
     implementation(libs.dexter)
-
     // Hỗ trợ media
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
-
-
     // Timber
     implementation(libs.timber)
-
+    // Volley
     implementation(libs.volley)
-
 //    // WebRTC dependencies
 //    implementation(libs.google.webrtc)
-
-    // lottie
+    // Lottie
     implementation(libs.lottie)
-
+    // Lib for Banner
     implementation(libs.androidx.viewpager2)
     implementation(libs.material.v1110)
     implementation(libs.circleindicator)
-
+    // CircleImageView
     implementation(libs.circleimageview)
-
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.database)
@@ -142,48 +155,34 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.messaging)
-
-
+    // Google Play Services
     implementation(libs.play.services.safetynet)
     implementation(libs.play.services.auth)
-
     // Architecture Components
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.androidx.activity.ktx)
-//    implementation(libs.androidx.lifecycle.viewmodel.ktx.v270)
-//    implementation(libs.androidx.lifecycle.livedata.ktx.v270)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-
     // Navigation
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.legacy.support.v4)
-    //noinspection KaptUsageInsteadOfKsp
-    kapt(libs.androidx.room.compiler)
-
+    ksp(libs.androidx.room.compiler)
     // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
-
+    kapt(libs.hilt.android.compiler)
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.kotlinx.coroutines.core)
-
-
-    // https://mvnrepository.com/artifact/com.github.bumptech.glide/glide
+    // Glide
     implementation(libs.glide)
-
     // Gson
     implementation(libs.gson)
-
-
     // RecyclerView
     implementation(libs.androidx.recyclerview)
     // Core
@@ -196,4 +195,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(kotlin("script-runtime"))
+}
+
+kapt {
+    correctErrorTypes = true
 }

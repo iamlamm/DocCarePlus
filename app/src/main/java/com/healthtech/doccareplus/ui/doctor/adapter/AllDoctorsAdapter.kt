@@ -54,7 +54,7 @@ class AllDoctorsAdapter : RecyclerView.Adapter<AllDoctorsAdapter.AllDoctorsViewH
                     .error(R.drawable.doctor)
 
                 Glide.with(root.context)
-                    .load(doctor.image)
+                    .load(doctor.avatar)
                     .apply(requestOptions)
                     .into(ivDoctorAvatar)
 

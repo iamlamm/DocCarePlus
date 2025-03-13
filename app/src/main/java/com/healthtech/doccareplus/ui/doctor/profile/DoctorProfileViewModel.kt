@@ -4,12 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.healthtech.doccareplus.domain.model.BookingRequest
-import com.healthtech.doccareplus.domain.model.TimePeriod
 import com.healthtech.doccareplus.domain.model.TimeSlot
-import com.healthtech.doccareplus.domain.repository.AuthRepository
 import com.healthtech.doccareplus.domain.repository.TimeSlotRepository
-import com.healthtech.doccareplus.domain.service.BookingService
 import com.healthtech.doccareplus.domain.repository.UserRepository
+import com.healthtech.doccareplus.domain.service.BookingService
+import com.healthtech.doccareplus.domain.service.PaymentService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,12 +19,15 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
+import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.PaymentSheetResult
 
 @HiltViewModel
 class DoctorProfileViewModel @Inject constructor(
     private val timeSlotRepository: TimeSlotRepository,
     private val bookingService: BookingService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val paymentService: PaymentService
 ) : ViewModel() {
     private val _state = MutableStateFlow<DoctorProfileState>(DoctorProfileState.Idle)
     val state: StateFlow<DoctorProfileState> = _state.asStateFlow()
@@ -41,6 +43,9 @@ class DoctorProfileViewModel @Inject constructor(
 
     private val _selectedDate = MutableStateFlow<Date?>(null)
     val selectedDate: StateFlow<Date?> = _selectedDate.asStateFlow()
+
+    private val _doctorId = MutableStateFlow<String?>(null)
+    val doctorId: StateFlow<String?> = _doctorId.asStateFlow()
 
     init {
         loadInitialData()
@@ -142,7 +147,9 @@ class DoctorProfileViewModel @Inject constructor(
         _selectedTimeSlot.value = null
     }
 
-    fun bookAppointment(doctorId: Int) {
+    fun bookAppointment(doctorId: String) {
+        _doctorId.value = doctorId
+        
         viewModelScope.launch {
             val selectedDate = _selectedDate.value
             val selectedSlot = _selectedTimeSlot.value
@@ -195,5 +202,144 @@ class DoctorProfileViewModel @Inject constructor(
         Log.d("DoctorProfileViewModel", "Starting chat with doctor: $doctorIdString, $doctorName")
         
         _state.value = DoctorProfileState.InitiateChat(doctorIdString, doctorName)
+    }
+
+    fun setupBooking(doctorId: String, doctorFee: Double) {
+        viewModelScope.launch {
+            val selectedDate = _selectedDate.value
+            val selectedSlot = _selectedTimeSlot.value
+
+            if (selectedDate == null) {
+                _state.value = DoctorProfileState.Error("Vui lòng chọn ngày")
+                return@launch
+            }
+
+            if (selectedSlot == null) {
+                _state.value = DoctorProfileState.Error("Vui lòng chọn giờ khám")
+                return@launch
+            }
+
+            try {
+                _state.value = DoctorProfileState.BookingLoading
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val formattedDate = dateFormat.format(selectedDate)
+
+                val userId = userRepository.getCurrentUserId()
+                if (userId == null) {
+                    _state.value = DoctorProfileState.Error("Không tìm thấy thông tin người dùng")
+                    return@launch
+                }
+
+                bookingService.checkSlotAvailability(doctorId, formattedDate, selectedSlot.id, userId)
+                    .collect { result ->
+                        result.fold(
+                            onSuccess = {
+                                initiatePayment(doctorFee)
+                            },
+                            onFailure = { e ->
+                                _state.value = DoctorProfileState.Error(e.message ?: "Không thể đặt lịch")
+                            }
+                        )
+                    }
+            } catch (e: Exception) {
+                _state.value = DoctorProfileState.Error(e.message ?: "Đã xảy ra lỗi")
+            }
+        }
+    }
+
+    private fun initiatePayment(doctorFee: Double) {
+        viewModelScope.launch {
+            _state.value = DoctorProfileState.PaymentLoading
+            
+            paymentService.initiatePayment(amount = doctorFee)
+                .collect { result ->
+                    result.fold(
+                        onSuccess = { params ->
+                            _state.value = DoctorProfileState.PaymentReady(
+                                paymentIntentClientSecret = params.paymentIntentClientSecret,
+                                customerConfig = params.customerConfig
+                            )
+                        },
+                        onFailure = { e ->
+                            _state.value = DoctorProfileState.PaymentFailed(e.message ?: "Lỗi thanh toán")
+                        }
+                    )
+                }
+        }
+    }
+
+    fun handlePaymentResult(paymentResult: PaymentSheetResult) {
+        when (paymentResult) {
+            is PaymentSheetResult.Completed -> {
+                bookAppointmentAfterPayment()
+            }
+            is PaymentSheetResult.Canceled -> {
+                _state.value = DoctorProfileState.PaymentCancelled
+            }
+            is PaymentSheetResult.Failed -> {
+                _state.value = DoctorProfileState.PaymentFailed(
+                    paymentResult.error.localizedMessage ?: "Thanh toán thất bại"
+                )
+            }
+        }
+    }
+
+    private fun bookAppointmentAfterPayment() {
+        viewModelScope.launch {
+            val selectedDate = _selectedDate.value
+            val selectedSlot = _selectedTimeSlot.value
+
+            if (selectedDate == null) {
+                _state.value = DoctorProfileState.Error("Vui lòng chọn ngày")
+                return@launch
+            }
+
+            if (selectedSlot == null) {
+                _state.value = DoctorProfileState.Error("Vui lòng chọn giờ khám")
+                return@launch
+            }
+
+            try {
+                _state.value = DoctorProfileState.BookingLoading
+
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val formattedDate = dateFormat.format(selectedDate)
+
+                val userId = userRepository.getCurrentUserId()
+                
+                val doctorId = _doctorId.value
+                if (doctorId == null) {
+                    _state.value = DoctorProfileState.Error("Không tìm thấy thông tin bác sĩ")
+                    return@launch
+                }
+                
+                val request = BookingRequest(
+                    doctorId = doctorId,
+                    userId = userId!!,
+                    date = formattedDate,
+                    slotId = selectedSlot.id
+                )
+
+                bookingService.bookAppointment(request)
+                    .collect { result ->
+                        result.fold(
+                            onSuccess = { appointmentId ->
+                                _state.value = DoctorProfileState.PaymentComplete(appointmentId)
+                            },
+                            onFailure = { e ->
+                                _state.value =
+                                    DoctorProfileState.Error(e.message ?: "Đặt lịch thất bại")
+                            }
+                        )
+                    }
+            } catch (e: Exception) {
+                _state.value = DoctorProfileState.Error(e.message ?: "Đã xảy ra lỗi")
+            }
+        }
+    }
+
+    fun setDoctorId(id: String) {
+        _doctorId.value = id
     }
 }

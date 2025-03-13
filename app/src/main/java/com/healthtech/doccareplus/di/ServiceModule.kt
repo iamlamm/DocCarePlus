@@ -3,9 +3,11 @@ package com.healthtech.doccareplus.di
 import com.healthtech.doccareplus.data.service.BookingServiceImpl
 import com.healthtech.doccareplus.data.service.CloudinaryServiceImpl
 import com.healthtech.doccareplus.data.service.NotificationServiceImpl
+import com.healthtech.doccareplus.data.service.PaymentServiceImpl
 import com.healthtech.doccareplus.domain.service.BookingService
 import com.healthtech.doccareplus.domain.service.CloudinaryService
 import com.healthtech.doccareplus.domain.service.NotificationService
+import com.healthtech.doccareplus.domain.service.PaymentService
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -32,4 +34,10 @@ abstract class ServiceModule {
     abstract fun bindCloudinaryService(
         cloudinaryServiceImpl: CloudinaryServiceImpl
     ): CloudinaryService
+
+    @Binds
+    @Singleton
+    abstract fun bindPaymentService(
+        paymentServiceImpl: PaymentServiceImpl
+    ): PaymentService
 }
