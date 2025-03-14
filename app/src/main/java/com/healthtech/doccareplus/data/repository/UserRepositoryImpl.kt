@@ -2,10 +2,12 @@ package com.healthtech.doccareplus.data.repository
 
 import com.healthtech.doccareplus.data.remote.api.AuthApi
 import com.healthtech.doccareplus.data.remote.api.FirebaseApi
+import com.healthtech.doccareplus.domain.model.Appointment
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.domain.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -21,6 +23,43 @@ class UserRepositoryImpl @Inject constructor(
 
     override fun getCurrentUserId(): String? {
         return authApi.getCurrentUserId()
+    }
+
+    override suspend fun getCurrentUser(): User? {
+        val currentUserId = authApi.getCurrentUserId() ?: return null
+        return try {
+            firebaseApi.getUser(currentUserId).getOrNull()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get current user")
+            null
+        }
+    }
+
+    override suspend fun getUserAppointments(userId: String): Flow<Result<List<Appointment>>> {
+        return firebaseApi.observeUserAppointments(userId)
+            .map { result ->
+                result.map { appointments ->
+                    // Thêm thông tin bác sĩ cho mỗi cuộc hẹn
+                    appointments.mapNotNull { appointment ->
+                        try {
+                            // Cố gắng lấy thông tin bác sĩ cho mỗi cuộc hẹn
+                            val doctor = firebaseApi.getDoctor(appointment.doctorId).getOrNull()
+                            if (doctor != null) {
+                                // Cập nhật thông tin bác sĩ trong cuộc hẹn
+                                appointment.copy(
+                                    doctorName = doctor.name,
+                                    doctorAvatar = doctor.avatar ?: ""
+                                )
+                            } else {
+                                appointment
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to get doctor for appointment ${appointment.id}")
+                            appointment
+                        }
+                    }
+                }
+            }
     }
 
     override suspend fun updateUserAvatar(avatarUrl: String): Result<Unit> {

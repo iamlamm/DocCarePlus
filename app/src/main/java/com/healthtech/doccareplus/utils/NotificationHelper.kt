@@ -71,6 +71,8 @@ class NotificationHelper @Inject constructor(
             NotificationType.APPOINTMENT_CANCELLED,
             NotificationType.APPOINTMENT_REMINDER -> CHANNEL_APPOINTMENTS
             NotificationType.SYSTEM -> CHANNEL_SYSTEM
+            NotificationType.APPOINTMENT_COMPLETED -> TODO()
+            NotificationType.ADMIN_NEW_APPOINTMENT -> TODO()
         }
         
         // Tạo intent để mở màn hình chính

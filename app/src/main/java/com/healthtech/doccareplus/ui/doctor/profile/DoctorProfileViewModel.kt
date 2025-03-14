@@ -149,7 +149,7 @@ class DoctorProfileViewModel @Inject constructor(
 
     fun bookAppointment(doctorId: String) {
         _doctorId.value = doctorId
-        
+
         viewModelScope.launch {
             val selectedDate = _selectedDate.value
             val selectedSlot = _selectedTimeSlot.value
@@ -198,9 +198,9 @@ class DoctorProfileViewModel @Inject constructor(
 
     fun initiateChatWithDoctor(doctorId: Int, doctorName: String) {
         val doctorIdString = doctorId.toString()
-        
+
         Log.d("DoctorProfileViewModel", "Starting chat with doctor: $doctorIdString, $doctorName")
-        
+
         _state.value = DoctorProfileState.InitiateChat(doctorIdString, doctorName)
     }
 
@@ -231,14 +231,20 @@ class DoctorProfileViewModel @Inject constructor(
                     return@launch
                 }
 
-                bookingService.checkSlotAvailability(doctorId, formattedDate, selectedSlot.id, userId)
+                bookingService.checkSlotAvailability(
+                    doctorId,
+                    formattedDate,
+                    selectedSlot.id,
+                    userId
+                )
                     .collect { result ->
                         result.fold(
                             onSuccess = {
                                 initiatePayment(doctorFee)
                             },
                             onFailure = { e ->
-                                _state.value = DoctorProfileState.Error(e.message ?: "Không thể đặt lịch")
+                                _state.value =
+                                    DoctorProfileState.Error(e.message ?: "Không thể đặt lịch")
                             }
                         )
                     }
@@ -251,7 +257,7 @@ class DoctorProfileViewModel @Inject constructor(
     private fun initiatePayment(doctorFee: Double) {
         viewModelScope.launch {
             _state.value = DoctorProfileState.PaymentLoading
-            
+
             paymentService.initiatePayment(amount = doctorFee)
                 .collect { result ->
                     result.fold(
@@ -262,7 +268,8 @@ class DoctorProfileViewModel @Inject constructor(
                             )
                         },
                         onFailure = { e ->
-                            _state.value = DoctorProfileState.PaymentFailed(e.message ?: "Lỗi thanh toán")
+                            _state.value =
+                                DoctorProfileState.PaymentFailed(e.message ?: "Lỗi thanh toán")
                         }
                     )
                 }
@@ -274,9 +281,11 @@ class DoctorProfileViewModel @Inject constructor(
             is PaymentSheetResult.Completed -> {
                 bookAppointmentAfterPayment()
             }
+
             is PaymentSheetResult.Canceled -> {
                 _state.value = DoctorProfileState.PaymentCancelled
             }
+
             is PaymentSheetResult.Failed -> {
                 _state.value = DoctorProfileState.PaymentFailed(
                     paymentResult.error.localizedMessage ?: "Thanh toán thất bại"
@@ -307,13 +316,13 @@ class DoctorProfileViewModel @Inject constructor(
                 val formattedDate = dateFormat.format(selectedDate)
 
                 val userId = userRepository.getCurrentUserId()
-                
+
                 val doctorId = _doctorId.value
                 if (doctorId == null) {
                     _state.value = DoctorProfileState.Error("Không tìm thấy thông tin bác sĩ")
                     return@launch
                 }
-                
+
                 val request = BookingRequest(
                     doctorId = doctorId,
                     userId = userId!!,

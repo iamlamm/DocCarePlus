@@ -14,4 +14,6 @@ interface BookingService {
      * Kiểm tra slot có khả dụng không trước khi bắt đầu quá trình thanh toán
      */
     suspend fun checkSlotAvailability(doctorId: String, date: String, slotId: Int, userId: String): Flow<Result<SlotAvailabilityResult>>
+
+    suspend fun updateAppointmentStatus(appointmentId: String, newStatus: String): Flow<Result<Unit>>
 }

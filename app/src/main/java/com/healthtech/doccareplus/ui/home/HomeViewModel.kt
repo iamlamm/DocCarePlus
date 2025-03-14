@@ -236,4 +236,26 @@ class HomeViewModel @Inject constructor(
     fun setSelectedAppointmentId(id: String) {
         _selectedAppointmentId.value = id
     }
+
+    /**
+     * Preload các tài nguyên cần thiết cho màn hình Appointments
+     * Giúp chuyển màn hình mượt mà hơn
+     */
+    fun preloadAppointmentsScreen() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Lấy người dùng hiện tại một cách đồng bộ
+                val user = userRepository.getCurrentUser()
+                
+                // Nếu có người dùng, preload cuộc hẹn của họ
+                user?.let { currentUser ->
+                    // Chỉ lấy giá trị đầu tiên từ flow để preload dữ liệu
+                    userRepository.getUserAppointments(currentUser.id).first()
+                }
+            } catch (e: Exception) {
+                // Bỏ qua lỗi khi preload - không ảnh hưởng UX
+                Log.e("HomeViewModel", "Error preloading appointments", e)
+            }
+        }
+    }
 }

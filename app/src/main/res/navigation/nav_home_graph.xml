@@ -239,5 +239,25 @@
             app:popUpTo="@id/profileFragment"
             app:popUpToInclusive="false" />
     </fragment>
+    <fragment
+        android:id="@+id/appointmentsFragment"
+        android:name="com.healthtech.doccareplus.ui.appointment.AppointmentsFragment"
+        android:label="AppointmentsFragment"
+        tools:layout="@layout/fragment_appointments">
+        <action
+            android:id="@+id/action_appointments_to_home"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_appointments"
+        app:destination="@id/appointmentsFragment"
+        app:enterAnim="@anim/slide_in_right"
+        app:exitAnim="@anim/fade_out"
+        app:popEnterAnim="@anim/fade_in"
+        app:popExitAnim="@anim/slide_out_right" />
 
 </navigation>

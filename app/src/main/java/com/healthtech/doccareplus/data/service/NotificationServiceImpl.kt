@@ -5,6 +5,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ServerValue
 import com.healthtech.doccareplus.domain.model.Notification
 import com.healthtech.doccareplus.domain.model.NotificationType
 import com.healthtech.doccareplus.domain.service.NotificationService
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Singleton
 class NotificationServiceImpl @Inject constructor(
@@ -132,6 +134,38 @@ class NotificationServiceImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("NotificationService", "Error marking notification as read: ${e.message}")
             Result.failure(e)
+        }
+    }
+
+    override suspend fun createAdminNotification(notification: Notification) {
+        try {
+            val notificationsRef = database.getReference("notifications/admin")
+            val notificationKey = notificationsRef.push().key ?: return
+            
+            // Tạo map với ID được cập nhật
+            val notificationMap = hashMapOf(
+                "id" to notificationKey,
+                "title" to notification.title,
+                "message" to notification.message,
+                "time" to notification.time,
+                "read" to notification.read,
+                "type" to notification.type.name,
+                "date" to notification.date,
+                "appointmentId" to notification.appointmentId
+            )
+            
+            // Lưu map thay vì đối tượng notification
+            notificationsRef.child(notificationKey)
+                .setValue(notificationMap)
+                .await()
+                
+            // Đếm số thông báo chưa đọc cho admin
+            database.getReference("adminStats/unreadNotifications")
+                .setValue(ServerValue.increment(1))
+                .await()
+                
+        } catch (e: Exception) {
+            Timber.tag("NotificationService").e("Error creating admin notification: %s", e.message)
         }
     }
 }

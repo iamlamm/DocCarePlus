@@ -1,6 +1,5 @@
 package com.healthtech.doccareplus.data.service
 
-import android.util.Log
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
 import com.healthtech.doccareplus.domain.model.BookingRequest
@@ -12,8 +11,10 @@ import com.healthtech.doccareplus.domain.service.NotificationService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,7 +35,7 @@ class BookingServiceImpl @Inject constructor(
             }
 
             // 2. Kiểm tra slot có khả dụng không
-            when (val availability = checkSlotAvailabilityInternal(
+            when (checkSlotAvailabilityInternal(
                 request.doctorId,
                 request.date,
                 request.slotId,
@@ -44,12 +45,13 @@ class BookingServiceImpl @Inject constructor(
                     // Tiếp tục quá trình đặt lịch
                     val appointmentId = createAppointment(request)
                     updateBookedSlots(request.doctorId, request.date, request.slotId)
-                    
+
                     // Lấy thông tin tên bác sĩ
                     val doctorRef = database.getReference("doctors/${request.doctorId}")
                     val doctorSnapshot = doctorRef.get().await()
-                    val doctorName = doctorSnapshot.child("name").getValue(String::class.java) ?: "Bác sĩ"
-                    
+                    val doctorName =
+                        doctorSnapshot.child("name").getValue(String::class.java) ?: "Bác sĩ"
+
                     // Tạo thông báo cho user
                     val userNotification = Notification(
                         title = "Đặt lịch thành công",
@@ -60,7 +62,7 @@ class BookingServiceImpl @Inject constructor(
                         appointmentId = appointmentId
                     )
                     notificationService.createUserNotification(userNotification, request.userId)
-                    
+
                     // Tạo thông báo cho doctor
                     val doctorNotification = Notification(
                         title = "Lịch hẹn mới",
@@ -70,8 +72,22 @@ class BookingServiceImpl @Inject constructor(
                         date = request.date,
                         appointmentId = appointmentId
                     )
-                    notificationService.createDoctorNotification(doctorNotification, request.doctorId)
-                    
+                    notificationService.createDoctorNotification(
+                        doctorNotification,
+                        request.doctorId
+                    )
+
+                    // Tạo thông báo cho admin
+                    val adminNotification = Notification(
+                        title = "Cuộc hẹn mới",
+                        message = "Bệnh nhân ${request.userName} đã đặt lịch với bác sĩ $doctorName. Mã cuộc hẹn: $appointmentId",
+                        time = System.currentTimeMillis(),
+                        type = NotificationType.ADMIN_NEW_APPOINTMENT,
+                        date = request.date,
+                        appointmentId = appointmentId
+                    )
+                    notificationService.createAdminNotification(adminNotification)
+
                     emit(Result.success(appointmentId))
                 }
 
@@ -88,15 +104,15 @@ class BookingServiceImpl @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Log.e("BookingService", "Error during booking: ${e.message}")
+            Timber.tag("BookingService").e("Error during booking: %s", e.message)
             emit(Result.failure(e))
         }
     }
 
     override suspend fun checkSlotAvailability(
-        doctorId: String, 
-        date: String, 
-        slotId: Int, 
+        doctorId: String,
+        date: String,
+        slotId: Int,
         userId: String
     ): Flow<Result<SlotAvailabilityResult>> = flow {
         try {
@@ -113,18 +129,61 @@ class BookingServiceImpl @Inject constructor(
                 is SlotAvailabilityResult.Available -> {
                     emit(Result.success(availability))
                 }
+
                 is SlotAvailabilityResult.AlreadyBookedByCurrentUser -> {
                     emit(Result.failure(Exception("Bạn đã đặt lịch khám vào khung giờ này")))
                 }
+
                 is SlotAvailabilityResult.AlreadyBookedByOther -> {
                     emit(Result.failure(Exception("Khung giờ này đã có người đặt lịch")))
                 }
+
                 is SlotAvailabilityResult.Unavailable -> {
                     emit(Result.failure(Exception("Bác sĩ không thể khám vào khung giờ này")))
                 }
             }
         } catch (e: Exception) {
-            Log.e("BookingService", "Error checking slot availability: ${e.message}")
+            Timber.tag("BookingService").e("Error checking slot availability: %s", e.message)
+            emit(Result.failure(e))
+        }
+    }
+
+    override suspend fun updateAppointmentStatus(
+        appointmentId: String,
+        newStatus: String
+    ): Flow<Result<Unit>> = flow {
+        try {
+            val appointmentRef = database.getReference("appointments/details/$appointmentId")
+            val appointmentSnapshot = appointmentRef.get().await()
+
+            if (!appointmentSnapshot.exists()) {
+                emit(Result.failure(Exception("Không tìm thấy cuộc hẹn")))
+                return@flow
+            }
+
+            val oldStatus = appointmentSnapshot.child("status").getValue(String::class.java) ?: ""
+            val doctorId = appointmentSnapshot.child("doctorId").getValue(String::class.java) ?: ""
+            val userId = appointmentSnapshot.child("userId").getValue(String::class.java) ?: ""
+
+            // Tạo map cho tất cả cập nhật
+            val updates = hashMapOf<String, Any>(
+                "appointments/details/$appointmentId/status" to newStatus,
+                "appointments/byDoctor/$doctorId/$appointmentId/status" to newStatus,
+                "appointments/byUser/$userId/$appointmentId/status" to newStatus
+            )
+
+            // Cập nhật thống kê trạng thái cho Admin
+            if (oldStatus.isNotEmpty()) {
+                updates["adminStats/appointmentsStatus/$oldStatus"] = ServerValue.increment(-1)
+            }
+            updates["adminStats/appointmentsStatus/$newStatus"] = ServerValue.increment(1)
+
+            // Thực hiện tất cả cập nhật trong một transaction
+            database.reference.updateChildren(updates).await()
+
+            emit(Result.success(Unit))
+        } catch (e: Exception) {
+            Timber.tag("BookingService").e("Error updating appointment status: %s", e.message)
             emit(Result.failure(e))
         }
     }
@@ -181,17 +240,26 @@ class BookingServiceImpl @Inject constructor(
     private suspend fun createAppointment(request: BookingRequest): String {
         val appointmentKey = database.getReference("appointments/details").push().key!!
 
+        // Lấy thông tin phí của bác sĩ
+        val doctorRef = database.getReference("doctors/${request.doctorId}")
+        val doctorSnapshot = doctorRef.get().await()
+        val doctorFee = doctorSnapshot.child("fee").getValue(Double::class.java) ?: 0.0
+        val doctorName = doctorSnapshot.child("name").getValue(String::class.java) ?: "Bác sĩ"
+
         val appointment = hashMapOf(
             "id" to appointmentKey,
             "doctorId" to request.doctorId,
+            "doctorName" to doctorName,
             "userId" to request.userId,
+            "userName" to request.userName,
             "date" to request.date,
             "slotId" to request.slotId,
             "status" to "upcoming",
+            "fee" to doctorFee,
             "createdAt" to ServerValue.TIMESTAMP
         )
 
-        // Lưu vào 3 nơi khác nhau theo cấu trúc mới
+        // Tạo map của tất cả cập nhật trong một lần transaction
         val updates = hashMapOf<String, Any>(
             // Chi tiết cuộc hẹn
             "appointments/details/$appointmentKey" to appointment,
@@ -203,10 +271,38 @@ class BookingServiceImpl @Inject constructor(
             "appointments/byUser/${request.userId}/$appointmentKey" to appointment,
 
             // Theo ngày
-            "appointments/byDate/${request.date}/$appointmentKey" to true
+            "appointments/byDate/${request.date}/$appointmentKey" to true,
+
+            // Thống kê cho Admin - thêm vào cùng transaction
+            "adminStats/appointmentsStatus/upcoming" to ServerValue.increment(1)
         )
 
+        // Cập nhật thông tin theo ngày
+        val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        if (request.date == todayDate) {
+            // Cập nhật số cuộc hẹn hôm nay
+            updates["adminStats/todayAppointmentsCount/date"] = todayDate
+            updates["adminStats/todayAppointmentsCount/count"] = ServerValue.increment(1)
+        }
+
+        // Cập nhật thống kê theo ngày
+        updates["adminStats/appointmentsByDate/${request.date}"] = ServerValue.increment(1)
+
+        // Cập nhật doanh thu theo tháng
+        val month = request.date.substring(0, 7) // Format: yyyy-MM
+        updates["adminStats/revenueByMonth/$month/totalAmount"] = ServerValue.increment(doctorFee)
+        updates["adminStats/revenueByMonth/$month/appointmentsCount"] = ServerValue.increment(1)
+
+        // Cập nhật doanh thu theo bác sĩ
+        updates["adminStats/revenueByDoctor/${request.doctorId}/$month"] =
+            ServerValue.increment(doctorFee)
+        updates["adminStats/revenueByDoctor/${request.doctorId}/totalAppointments"] =
+            ServerValue.increment(1)
+
+        // Thực hiện tất cả cập nhật trong một transaction
         database.reference.updateChildren(updates).await()
+
         return appointmentKey
     }
 

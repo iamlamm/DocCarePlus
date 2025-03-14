@@ -72,6 +72,8 @@ class NotificationAdapter :
                             NotificationType.APPOINTMENT_CANCELLED -> R.drawable.ic_cancel
                             NotificationType.APPOINTMENT_REMINDER -> R.drawable.notification
                             NotificationType.SYSTEM -> R.drawable.ic_info
+                            NotificationType.APPOINTMENT_COMPLETED -> TODO()
+                            NotificationType.ADMIN_NEW_APPOINTMENT -> TODO()
                         }
                     )
                     // Thay đổi alpha của icon nếu đã đọc

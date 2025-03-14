@@ -7,6 +7,7 @@ interface NotificationService {
     // Tạo thông báo cho user và doctor
     suspend fun createUserNotification(notification: Notification, userId: String): Result<String>
     suspend fun createDoctorNotification(notification: Notification, doctorId: String): Result<String>
+    suspend fun createAdminNotification(notification: Notification)
     
     // Lắng nghe thông báo của user
     fun observeNotifications(userId: String): Flow<Result<List<Notification>>>

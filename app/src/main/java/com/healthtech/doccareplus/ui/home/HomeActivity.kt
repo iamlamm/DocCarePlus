@@ -16,6 +16,7 @@ import androidx.navigation.fragment.NavHostFragment
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.ActivityHomeBinding
 import com.healthtech.doccareplus.utils.PermissionManager
+import com.healthtech.doccareplusadmin.utils.AnimationUtils.showWithAnimation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -149,9 +150,6 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // binding.ivUserAvatar.setOnClickListener {
-        //     navController.navigate(R.id.action_global_profile)
-        // }
         binding.apply {
             ivUserAvatar.setOnClickListener {
                 navController.navigate(R.id.action_global_profile)
@@ -160,6 +158,18 @@ class HomeActivity : AppCompatActivity() {
             btnNotification.setOnClickListener {
                 navController.navigate(R.id.action_global_notification)
             }
+
+            // Đầu tiên, thiết lập click listener cho FAB
+            fabCalendar.setOnClickListener {
+                // Preload dữ liệu nếu cần
+                viewModel.preloadAppointmentsScreen()
+
+                // Điều hướng đến màn hình cuộc hẹn
+                navController.navigate(R.id.action_global_appointments)
+            }
+
+            // Sau đó, hiển thị FAB với animation (nếu cần)
+            fabCalendar.showWithAnimation(duration = 2000)
         }
     }
 
@@ -168,10 +178,10 @@ class HomeActivity : AppCompatActivity() {
             when (destination.id) {
                 R.id.allCategoriesFragment,
                 R.id.allDoctorsFragment,
-                R.id.allDoctorsFragment,
                 R.id.profileFragment,
                 R.id.notificationFragment,
-                R.id.editProfileFragment -> {
+                R.id.editProfileFragment,
+                R.id.appointmentsFragment -> {
                     hideAppBarAndBottomAppBar()
                 }
 
