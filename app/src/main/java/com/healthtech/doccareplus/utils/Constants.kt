@@ -3,11 +3,10 @@ package com.healthtech.doccareplus.utils
 
 object Constants {
     // Zego App Chat
-    const val APP_ID: Long = 16511
-    const val APP_SIGN: String = ""
+    const val APP_ID: Long = 1651115921
+    const val APP_SIGN: String = "fb5b79b92c4f547b0e4bcd156780eed2df46dad1702f786c608ad335c9d0ffb8"
 
     // Cloudinary
-<<<<<<< HEAD
     const val CLOUDINARY_CLOUD_NAME = "daull03yv"
     const val CLOUDINARY_API_KEY = "656698752728255"
     const val CLOUDINARY_API_SECRET = "X84MgryT5lvKJdfSfjoQeOo7uXY"
@@ -18,10 +17,3 @@ object Constants {
 
     const val BACKEND_URL = "http://192.168.136.102:3000"
 }
-=======
-    const val CLOUDINARY_CLOUD_NAME = ""
-    const val CLOUDINARY_API_KEY = ""
-    const val CLOUDINARY_API_SECRET = ""
-    const val CLOUDINARY_FOLDER_STORE_AVATAR = ""
-}
->>>>>>> 9b1f5b00571d843d7f9d5cdd9f38931e9908dd67
