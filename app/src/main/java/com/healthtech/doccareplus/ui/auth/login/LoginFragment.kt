@@ -124,18 +124,8 @@ class LoginFragment : Fragment() {
                     }
 
                     is LoginState.Error -> {
-//                        binding.progressBarLogin.visibility = View.GONE
                         binding.progressBarLogin.setLoading(false)
                         binding.btnLoginSubmit.isEnabled = true
-//                        MaterialAlertDialogBuilder(requireContext())
-//                            .setTitle("Thông báo")
-//                            .setMessage(state.message)
-//                            .setPositiveButton("Đã hiểu") { _, _ ->
-//                                // Reset state khi người dùng đã xem thông báo lỗi
-//                                viewModel.resetLoginState()
-//                            }
-//                            .show()
-
                         showErrorDialog(
                             title = "Thông báo",
                             message = state.message,
@@ -147,7 +137,6 @@ class LoginFragment : Fragment() {
                     }
 
                     else -> {
-//                        binding.progressBarLogin.visibility = View.GONE
                         binding.progressBarLogin.setLoading(false)
                         binding.btnLoginSubmit.isEnabled = true
                     }
@@ -190,17 +179,26 @@ class LoginFragment : Fragment() {
             }
 
             hasPasswordFocused && password.isEmpty() -> {
-                binding.tilLoginPassword.error = getString(R.string.password_required)
+//                binding.tilLoginPassword.error = getString(R.string.password_required)
+//                false
+                binding.tilLoginPassword.helperText = getString(R.string.password_required)
+                binding.tilLoginPassword.isHelperTextEnabled = true
                 false
             }
 
             !ValidationUtils.isValidPassword(password) -> {
-                binding.tilLoginPassword.error = getString(R.string.invalid_password)
+//                binding.tilLoginPassword.error = getString(R.string.invalid_password)
+//                false
+                binding.tilLoginPassword.helperText = getString(R.string.invalid_password)
+                binding.tilLoginPassword.isHelperTextEnabled = true
                 false
             }
 
             else -> {
-                binding.tilLoginPassword.error = null
+//                binding.tilLoginPassword.error = null
+//                true
+                binding.tilLoginPassword.helperText = null
+                binding.tilLoginPassword.isHelperTextEnabled = false
                 true
             }
         }

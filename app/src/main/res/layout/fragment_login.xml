@@ -59,13 +59,13 @@
         app:boxCornerRadiusTopEnd="8dp"
         app:boxCornerRadiusTopStart="8dp"
         app:boxStrokeColor="@color/steel_teal"
+        app:expandedHintEnabled="false"
         app:hintTextColor="@color/steel_teal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_login_subtitle"
         app:startIconDrawable="@drawable/ic_email"
-        app:startIconTint="@color/steel_teal"
-        app:expandedHintEnabled="false">
+        app:startIconTint="@color/steel_teal">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_login_email"
@@ -90,6 +90,8 @@
         app:boxCornerRadiusTopEnd="8dp"
         app:boxCornerRadiusTopStart="8dp"
         app:boxStrokeColor="@color/steel_teal"
+        app:expandedHintEnabled="false"
+        app:helperTextTextColor="@color/error"
         app:hintTextColor="@color/steel_teal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -97,8 +99,7 @@
         app:passwordToggleEnabled="true"
         app:passwordToggleTint="@color/steel_teal"
         app:startIconDrawable="@drawable/ic_password"
-        app:startIconTint="@color/steel_teal"
-        app:expandedHintEnabled="false">
+        app:startIconTint="@color/steel_teal">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_login_password"

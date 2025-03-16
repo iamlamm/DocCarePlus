@@ -126,6 +126,8 @@ dependencies {
     // Cloudinary
     implementation(libs.cloudinary.android)
     // ZegoCloud
+//    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
+    implementation("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
     implementation("com.github.ZEGOCLOUD:zego_inapp_chat_uikit_android:+")
     // Dexter
     implementation(libs.dexter)
