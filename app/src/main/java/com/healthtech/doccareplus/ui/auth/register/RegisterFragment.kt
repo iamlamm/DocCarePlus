@@ -176,22 +176,34 @@ class RegisterFragment : Fragment() {
         val password = binding.etRegisterPassword.text.toString()
         return when {
             !hasPasswordFocused && password.isEmpty() -> {
-                binding.tilRegisterPassword.error = null
+//                binding.tilRegisterPassword.error = null
+//                false
+                binding.tilRegisterPassword.helperText = null
+                binding.tilRegisterPassword.isHelperTextEnabled = false
                 false
             }
 
             hasPasswordFocused && password.isEmpty() -> {
-                binding.tilRegisterPassword.error = getString(R.string.password_required)
+//                binding.tilRegisterPassword.error = getString(R.string.password_required)
+//                false
+                binding.tilRegisterPassword.helperText = getString(R.string.password_required)
+                binding.tilRegisterPassword.isHelperTextEnabled = true
                 false
             }
 
             !ValidationUtils.isValidPassword(password) -> {
-                binding.tilRegisterPassword.error = getString(R.string.invalid_password)
+//                binding.tilRegisterPassword.error = getString(R.string.invalid_password)
+//                false
+                binding.tilRegisterPassword.helperText = getString(R.string.invalid_password)
+                binding.tilRegisterPassword.isHelperTextEnabled = true
                 false
             }
 
             else -> {
-                binding.tilRegisterPassword.error = null
+//                binding.tilRegisterPassword.error = null
+//                true
+                binding.tilRegisterPassword.helperText = null
+                binding.tilRegisterPassword.isHelperTextEnabled = false
                 true
             }
         }
@@ -202,23 +214,37 @@ class RegisterFragment : Fragment() {
         val confirmPassword = binding.etRegisterConfirmPassword.text.toString()
         return when {
             !hasConfirmPasswordFocused && confirmPassword.isEmpty() -> {
-                binding.tilRegisterConfirmPassword.error = null
+//                binding.tilRegisterConfirmPassword.error = null
+//                false
+                binding.tilRegisterConfirmPassword.helperText = null
+                binding.tilRegisterConfirmPassword.isHelperTextEnabled = false
                 false
             }
 
             hasConfirmPasswordFocused && confirmPassword.isEmpty() -> {
-                binding.tilRegisterConfirmPassword.error =
+//                binding.tilRegisterConfirmPassword.error =
+//                    getString(R.string.confirm_password_required)
+//                false
+                binding.tilRegisterConfirmPassword.helperText =
                     getString(R.string.confirm_password_required)
+                binding.tilRegisterConfirmPassword.isHelperTextEnabled = true
                 false
             }
 
             password != confirmPassword -> {
-                binding.tilRegisterConfirmPassword.error = getString(R.string.passwords_not_match)
+//                binding.tilRegisterConfirmPassword.error = getString(R.string.passwords_not_match)
+//                false
+                binding.tilRegisterConfirmPassword.helperText =
+                    getString(R.string.passwords_not_match)
+                binding.tilRegisterConfirmPassword.isHelperTextEnabled = true
                 false
             }
 
             else -> {
-                binding.tilRegisterConfirmPassword.error = null
+//                binding.tilRegisterConfirmPassword.error = null
+//                true
+                binding.tilRegisterConfirmPassword.helperText = null
+                binding.tilRegisterConfirmPassword.isHelperTextEnabled = false
                 true
             }
         }

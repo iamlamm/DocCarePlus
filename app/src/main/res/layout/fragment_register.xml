@@ -64,6 +64,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:hint="@string/password_register_hint"
+        app:helperTextTextColor="@color/error"
         app:layout_constraintTop_toBottomOf="@id/til_register_phone"
         app:passwordToggleEnabled="true">
 
@@ -82,6 +83,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:hint="@string/confirm_password_hint"
+        app:helperTextTextColor="@color/error"
         app:layout_constraintTop_toBottomOf="@id/til_register_password"
         app:passwordToggleEnabled="true">
 
