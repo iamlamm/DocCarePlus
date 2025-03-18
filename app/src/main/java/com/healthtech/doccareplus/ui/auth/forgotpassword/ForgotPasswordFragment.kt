@@ -43,10 +43,15 @@ class ForgotPasswordFragment : Fragment() {
 
 
     private fun setupClickListeners() {
-        binding.btnForgotPasswordSubmit.setOnClickListener {
-            hideKeyboard()
-            val email = binding.etForgotPasswordEmail.text.toString()
-            viewModel.resetPassword(email)
+        binding.apply {
+            btnForgotPasswordSubmit.setOnClickListener {
+                hideKeyboard()
+                val email = etForgotPasswordEmail.text.toString()
+                viewModel.resetPassword(email)
+            }
+            tvForgotPasswordToLogin.setOnClickListener {
+                findNavController().navigate(R.id.action_forgot_password_to_login)
+            }
         }
     }
 

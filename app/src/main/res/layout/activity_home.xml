@@ -11,7 +11,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@drawable/bg_top_rounded"
         android:fitsSystemWindows="true"
         app:elevation="0dp">
         <!-- Top Bar -->
@@ -56,17 +56,17 @@
                 app:layout_constraintStart_toEndOf="@id/iv_user_avatar"
                 app:layout_constraintTop_toBottomOf="@id/tv_welcome_back" />
 
-            <ImageButton
-                android:id="@+id/btn_search"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/grayish_green_oval_border"
-                android:contentDescription="@string/cd_search_button"
-                android:src="@drawable/search_icon"
-                app:layout_constraintEnd_toStartOf="@id/btn_notification"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />
+            <!--            <ImageButton-->
+            <!--                android:id="@+id/btn_search"-->
+            <!--                android:layout_width="40dp"-->
+            <!--                android:layout_height="40dp"-->
+            <!--                android:layout_marginEnd="8dp"-->
+            <!--                android:background="@drawable/grayish_green_oval_border"-->
+            <!--                android:contentDescription="@string/cd_search_button"-->
+            <!--                android:src="@drawable/search_icon"-->
+            <!--                app:layout_constraintEnd_toStartOf="@id/btn_notification"-->
+            <!--                app:layout_constraintTop_toTopOf="parent"-->
+            <!--                tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />-->
 
             <ImageButton
                 android:id="@+id/btn_notification"

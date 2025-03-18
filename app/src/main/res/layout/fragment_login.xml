@@ -8,15 +8,27 @@
     android:paddingHorizontal="24dp">
 
     <!-- Logo/Image at top -->
-    <ImageView
+    <!--    <ImageView-->
+    <!--        android:id="@+id/iv_login_logo"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="120dp"-->
+    <!--        android:layout_marginTop="48dp"-->
+    <!--        android:src="@drawable/app_logo_1"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+    <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/iv_login_logo"
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:layout_marginTop="48dp"
-        android:src="@drawable/app_logo_1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/doccare_1" />
 
     <!-- Welcome Text -->
     <TextView

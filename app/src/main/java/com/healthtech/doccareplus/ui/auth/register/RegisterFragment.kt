@@ -38,7 +38,7 @@ class RegisterFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentRegisterBinding.inflate(layoutInflater, container, false)
+        _binding = FragmentRegisterBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -276,12 +276,12 @@ class RegisterFragment : Fragment() {
             viewModel.registerState.collect { state ->
                 when (state) {
                     is RegisterState.Loading -> {
-                        binding.progressBarRegister.visibility = View.VISIBLE
+                        binding.progressBarRegister.setLoading(true)
                         binding.btnRegisterSubmit.isEnabled = false
                     }
 
                     is RegisterState.EmailVerificationSent -> {
-                        binding.progressBarRegister.visibility = View.GONE
+                        binding.progressBarRegister.setLoading(false)
                         binding.btnRegisterSubmit.isEnabled = true
 
 //                        MaterialAlertDialogBuilder(requireContext())
@@ -303,7 +303,7 @@ class RegisterFragment : Fragment() {
                     }
 
                     is RegisterState.Error -> {
-                        binding.progressBarRegister.visibility = View.GONE
+                        binding.progressBarRegister.setLoading(false)
                         binding.btnRegisterSubmit.isEnabled = true
                         showErrorDialog(
                             title = "Thông báo",
@@ -326,7 +326,7 @@ class RegisterFragment : Fragment() {
                     }
 
                     else -> {
-                        binding.progressBarRegister.visibility = View.GONE
+                        binding.progressBarRegister.setLoading(false)
                         binding.btnRegisterSubmit.isEnabled = true
                     }
                 }

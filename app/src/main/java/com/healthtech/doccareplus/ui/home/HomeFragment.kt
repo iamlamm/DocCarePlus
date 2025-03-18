@@ -40,10 +40,13 @@ class HomeFragment : BaseFragment() {
 
     private val bannerImages = listOf(
         R.drawable.banner,
-        R.drawable.banner,
-        R.drawable.banner,
-        R.drawable.banner,
-        R.drawable.banner
+        R.drawable.banner_2,
+        R.drawable.banner_3,
+        R.drawable.banner_4,
+        R.drawable.banner_5,
+        R.drawable.banner_6,
+        R.drawable.banner_7,
+        R.drawable.banner_8
     )
 
     // Biến theo dõi trạng thái đã thiết lập data observers
