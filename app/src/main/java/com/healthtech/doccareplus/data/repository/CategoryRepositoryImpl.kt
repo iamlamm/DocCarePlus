@@ -8,6 +8,7 @@ import com.healthtech.doccareplus.domain.mapper.toCategory
 import com.healthtech.doccareplus.domain.mapper.toCategoryEntity
 import com.healthtech.doccareplus.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.map
@@ -35,47 +36,89 @@ class CategoryRepositoryImpl @Inject constructor(
     private val remoteDataSource: CategoryRemoteDataSourceImpl,
     private val localDataSource: CategoryLocalDataSourceImpl
 ) : CategoryRepository {
-    override fun observeCategories(): Flow<Result<List<Category>>> = channelFlow {
-        launch {
-            try {
-                // Emit local data first
-                localDataSource.getCategories().catch { e ->
+//    override fun observeCategories(): Flow<Result<List<Category>>> = channelFlow {
+//        launch {
+//            try {
+//                // Emit local data first
+//                localDataSource.getCategories().catch { e ->
+//                    if (e !is CancellationException) {
+//                        send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
+//                    }
+//                }
+//                    .map { listEntities ->
+//                        listEntities.map {
+//                            it.toCategory()
+//                        }
+//                    }.collect { listCategories ->
+//                        if (listCategories.isNotEmpty()) {
+//                            send(Result.success(listCategories))
+//                        }
+//                    }
+//            } catch (e: Exception) {
+//                send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
+//                Log.e("CategoryRepository", "Error loading local data", e)
+//            }
+//        }
+//
+//        launch {
+//            // Then fetch from remote
+//            try {
+//                remoteDataSource.getCategories().catch { e ->
+//                    if (e !is CancellationException) {
+//                        send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+//                    }
+//                }.collect { listCategories ->
+//                    // Save to local database
+//                    localDataSource.insertCategories(listCategories.map { it.toCategoryEntity() })
+//                    // Emit new data
+//                    send(Result.success(listCategories))
+//                }
+//            } catch (e: Exception) {
+//                send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+//                Log.e("CategoryRepository", "Error fetching remote data", e)
+//            }
+//        }
+//    }
+
+    override fun observeCategories(): Flow<Result<List<Category>>> = callbackFlow {
+        try {
+            localDataSource.getCategories()
+                .catch { e ->
                     if (e !is CancellationException) {
                         send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
                     }
                 }
-                    .map { listEntities ->
-                        listEntities.map {
-                            it.toCategory()
-                        }
-                    }.collect { listCategories ->
-                        if (listCategories.isNotEmpty()) {
-                            send(Result.success(listCategories))
-                        }
+                .map { listEntities -> listEntities.map { it.toCategory() } }
+                .collect { localCategories ->
+                    if (localCategories.isNotEmpty()) {
+                        send(Result.success(localCategories))
                     }
-            } catch (e: Exception) {
-                send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
-                Log.e("CategoryRepository", "Error loading local data", e)
-            }
-        }
 
-        launch {
-            // Then fetch from remote
-            try {
-                remoteDataSource.getCategories().catch { e ->
-                    if (e !is CancellationException) {
+                    // Sau khi emit local data, fetch remote data
+                    try {
+                        remoteDataSource.getCategories()
+                            .catch { e ->
+                                if (e !is CancellationException) {
+                                    send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                                }
+                            }
+                            .collect { remoteCategories ->
+                                // So sánh với local data
+                                if (localCategories != remoteCategories) {
+                                    // Update local cache nếu khác
+                                    localDataSource.insertCategories(remoteCategories.map { it.toCategoryEntity() })
+                                    // Emit new data
+                                    send(Result.success(remoteCategories))
+                                }
+                            }
+                    } catch (e: Exception) {
                         send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                        Log.e("CategoryRepository", "Error fetching remote data", e)
                     }
-                }.collect { listCategories ->
-                    // Save to local database
-                    localDataSource.insertCategories(listCategories.map { it.toCategoryEntity() })
-                    // Emit new data
-                    send(Result.success(listCategories))
                 }
-            } catch (e: Exception) {
-                send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
-                Log.e("CategoryRepository", "Error fetching remote data", e)
-            }
+        } catch (e: Exception) {
+            send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
+            Log.e("CategoryRepository", "Error loading local data", e)
         }
     }
 }

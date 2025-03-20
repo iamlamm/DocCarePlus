@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class AllCategoriesViewModel @Inject constructor(
@@ -110,8 +111,20 @@ class AllCategoriesViewModel @Inject constructor(
     // Hàm này gọi khi người dùng chủ động muốn refresh
     fun refreshCategories() {
         viewModelScope.launch(Dispatchers.IO) {
-            lastRefreshTime = System.currentTimeMillis()
-            refreshCategories(categoryRepository)
+            try {
+                // Đánh dấu đã refresh
+                lastRefreshTime = System.currentTimeMillis()
+                
+                // Sử dụng lại BaseDataViewModel
+                _categories.value = UiState.Loading
+                
+                // Gọi lại observeCategories sẽ buộc repository lấy dữ liệu mới từ Firebase
+                observeCategories(categoryRepository)
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    _categories.value = UiState.Error(e.message ?: "Unknown error")
+                }
+            }
         }
     }
 

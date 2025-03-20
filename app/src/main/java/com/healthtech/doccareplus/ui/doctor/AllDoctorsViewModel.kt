@@ -179,7 +179,25 @@ class AllDoctorsViewModel @Inject constructor(
 
     // Hàm này gọi khi người dùng chủ động refresh (pull-to-refresh)
     fun refreshDoctors() {
-        refreshDoctorsByCategory()
+        viewModelScope.launch {
+            try {
+                lastRefreshTime = System.currentTimeMillis()
+                _doctors.value = UiState.Loading
+                
+                val catId = _categoryId.value
+                if (catId != null) {
+                    // Buộc tải lại dữ liệu bác sĩ theo category
+                    loadDoctorsByCategory(catId)
+                } else {
+                    // Tải lại tất cả bác sĩ
+                    observeDoctors(doctorRepository)
+                }
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    _doctors.value = UiState.Error(e.message ?: "Unknown error")
+                }
+            }
+        }
     }
 
     fun setSearchActive(active: Boolean) {

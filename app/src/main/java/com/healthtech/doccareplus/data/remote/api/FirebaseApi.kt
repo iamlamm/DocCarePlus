@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,92 +30,134 @@ import javax.inject.Singleton
 class FirebaseApi @Inject constructor(
     private val database: FirebaseDatabase
 ) {
+//    fun getCategories(): Flow<List<Category>> = callbackFlow {
+//        val categoriesRef = database.getReference("categories")
+//        val listener = object : ValueEventListener {
+//            override fun onDataChange(snapshot: DataSnapshot) {
+//                // Khi có dữ liệu mới, convert từ JSON sang List<Category>
+//                val categoryList = mutableListOf<Category>()
+//                // Duyệt qua từng child node trong categories
+//                for (categorySnapshot in snapshot.children) {
+//                    // Convert từng node thành đối tượng Category
+//                    categorySnapshot.getValue(Category::class.java)?.let { category ->
+//                        categoryList.add(category)
+//                    }
+//                }
+//                // Gửi danh sách category mới vào Flow
+//                trySend(categoryList)
+//            }
+//
+//            override fun onCancelled(error: DatabaseError) {
+//                // Xử lý khi có lỗi xảy ra
+//                // Có thể log lỗi hoặc thông báo cho user
+//                Log.e("ERROR LOADING CATEGORY", error.message)
+//            }
+//        }
+//        // Đăng ký listener với Firebase
+//        categoriesRef.addValueEventListener(listener)
+//
+//        // Đóng luồng khi xong
+//        // Khi Flow bị hủy, remove listener để tránh memory leak
+//        awaitClose {
+//            categoriesRef.removeEventListener(listener)
+//            println("Flow getCategories đóng")
+//        }
+//    }
+
     fun getCategories(): Flow<List<Category>> = callbackFlow {
-        val categoriesRef = database.getReference("categories")
+        val categoryRef = database.getReference("categories")
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Khi có dữ liệu mới, convert từ JSON sang List<Category>
                 val categoryList = mutableListOf<Category>()
-                // Duyệt qua từng child node trong categories
                 for (categorySnapshot in snapshot.children) {
-                    // Convert từng node thành đối tượng Category
                     categorySnapshot.getValue(Category::class.java)?.let { category ->
                         categoryList.add(category)
                     }
                 }
-                // Gửi danh sách category mới vào Flow
                 trySend(categoryList)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Xử lý khi có lỗi xảy ra
-                // Có thể log lỗi hoặc thông báo cho user
-                Log.e("ERROR LOADING CATEGORY", error.message)
+                Timber.e("Error getCategories: ${error.message}")
             }
         }
-        // Đăng ký listener với Firebase
-        categoriesRef.addValueEventListener(listener)
-
-        // Đóng luồng khi xong
-        // Khi Flow bị hủy, remove listener để tránh memory leak
-        awaitClose {
-            categoriesRef.removeEventListener(listener)
-            println("Flow getCategories đóng")
-        }
+        categoryRef.addValueEventListener(listener)
+        awaitClose { categoryRef.removeEventListener(listener) }
     }
 
+//    fun getDoctors(): Flow<List<Doctor>> = callbackFlow {
+//        val doctorsRef = database.getReference("doctors")
+//        val listener = object : ValueEventListener {
+//            override fun onDataChange(snapshot: DataSnapshot) {
+//                try {
+//                    val doctorList = snapshot.children.mapNotNull { doctorSnapshot ->
+//                        val doctorId = doctorSnapshot.key ?: return@mapNotNull null
+//                        try {
+//                            Doctor(
+//                                id = doctorId,
+//                                code = doctorSnapshot.child("code").getValue(String::class.java) ?: "",
+//                                name = doctorSnapshot.child("name").getValue(String::class.java) ?: "",
+//                                specialty = doctorSnapshot.child("specialty").getValue(String::class.java) ?: "",
+//                                categoryId = doctorSnapshot.child("categoryId").getValue(Long::class.java)?.toInt() ?: 0,
+//                                rating = doctorSnapshot.child("rating").getValue(Double::class.java)?.toFloat() ?: 0F,
+//                                reviews = doctorSnapshot.child("reviews").getValue(Long::class.java) ?: 0L,
+//                                fee = doctorSnapshot.child("fee").getValue(Double::class.java) ?: 0.0,
+//                                avatar = doctorSnapshot.child("avatar").getValue(String::class.java) ?: "",
+//                                available = doctorSnapshot.child("available").getValue(Boolean::class.java) ?: true,
+//                                biography = doctorSnapshot.child("biography").getValue(String::class.java) ?: "",
+//                                role = try {
+//                                    val roleString = doctorSnapshot.child("role").getValue(String::class.java) ?: "DOCTOR"
+//                                    UserRole.valueOf(roleString)
+//                                } catch (e: Exception) {
+//                                    UserRole.DOCTOR
+//                                },
+//                                email = doctorSnapshot.child("email").getValue(String::class.java) ?: "",
+//                                phoneNumber = doctorSnapshot.child("phoneNumber").getValue(String::class.java) ?: "",
+//                                emergencyContact = doctorSnapshot.child("emergencyContact").getValue(String::class.java) ?: "",
+//                                address = doctorSnapshot.child("address").getValue(String::class.java) ?: ""
+//                            )
+//                        } catch (e: Exception) {
+//                            Log.e("FirebaseApi", "Error parsing doctor $doctorId: ${e.message}")
+//                            null
+//                        }
+//                    }
+//
+//                    trySend(doctorList)
+//                } catch (e: Exception) {
+//                    Log.e("FirebaseApi", "Error processing doctors data: ${e.message}")
+//                    trySend(emptyList())
+//                }
+//            }
+//
+//            override fun onCancelled(error: DatabaseError) {
+//                Log.e("ERROR LOADING DOCTOR", error.message)
+//                close(error.toException())
+//            }
+//        }
+//
+//        doctorsRef.addValueEventListener(listener)
+//        awaitClose { doctorsRef.removeEventListener(listener) }
+//    }
+
     fun getDoctors(): Flow<List<Doctor>> = callbackFlow {
-        val doctorsRef = database.getReference("doctors")
+        val doctorRef = database.getReference("doctors")
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                try {
-                    val doctorList = snapshot.children.mapNotNull { doctorSnapshot ->
-                        val doctorId = doctorSnapshot.key ?: return@mapNotNull null
-                        try {
-                            Doctor(
-                                id = doctorId,
-                                code = doctorSnapshot.child("code").getValue(String::class.java) ?: "",
-                                name = doctorSnapshot.child("name").getValue(String::class.java) ?: "",
-                                specialty = doctorSnapshot.child("specialty").getValue(String::class.java) ?: "",
-                                categoryId = doctorSnapshot.child("categoryId").getValue(Long::class.java)?.toInt() ?: 0,
-                                rating = doctorSnapshot.child("rating").getValue(Double::class.java)?.toFloat() ?: 0F,
-                                reviews = doctorSnapshot.child("reviews").getValue(Long::class.java) ?: 0L,
-                                fee = doctorSnapshot.child("fee").getValue(Double::class.java) ?: 0.0,
-                                avatar = doctorSnapshot.child("avatar").getValue(String::class.java) ?: "",
-                                available = doctorSnapshot.child("available").getValue(Boolean::class.java) ?: true,
-                                biography = doctorSnapshot.child("biography").getValue(String::class.java) ?: "",
-                                role = try {
-                                    val roleString = doctorSnapshot.child("role").getValue(String::class.java) ?: "DOCTOR"
-                                    UserRole.valueOf(roleString)
-                                } catch (e: Exception) {
-                                    UserRole.DOCTOR
-                                },
-                                email = doctorSnapshot.child("email").getValue(String::class.java) ?: "",
-                                phoneNumber = doctorSnapshot.child("phoneNumber").getValue(String::class.java) ?: "",
-                                emergencyContact = doctorSnapshot.child("emergencyContact").getValue(String::class.java) ?: "",
-                                address = doctorSnapshot.child("address").getValue(String::class.java) ?: ""
-                            )
-                        } catch (e: Exception) {
-                            Log.e("FirebaseApi", "Error parsing doctor $doctorId: ${e.message}")
-                            null
-                        }
+                val doctorList = mutableListOf<Doctor>()
+                for (doctorSnapshot in snapshot.children) {
+                    doctorSnapshot.getValue(Doctor::class.java)?.let { doctor ->
+                        doctorList.add(doctor)
                     }
-
-                    trySend(doctorList)
-                } catch (e: Exception) {
-                    Log.e("FirebaseApi", "Error processing doctors data: ${e.message}")
-                    trySend(emptyList())
                 }
+                trySend(doctorList)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e("ERROR LOADING DOCTOR", error.message)
-                close(error.toException())
+                Timber.e("Error getDoctors: ${error.message}")
             }
         }
-
-        doctorsRef.addValueEventListener(listener)
-        awaitClose { doctorsRef.removeEventListener(listener) }
+        doctorRef.addValueEventListener(listener)
+        awaitClose { doctorRef.removeEventListener(listener) }
     }
 
     // Thêm vào FirebaseApi.kt

@@ -50,6 +50,8 @@ class AllCategoriesFragment : BaseFragment() {
         setupRecyclerView()
         setupSearchView()
         setupBackPressHandling()
+        
+        // Đảm bảo tái thiết lập observers mỗi khi fragment được tạo
         observeCategories()
         observeSearchResults()
     }
@@ -242,8 +244,8 @@ class AllCategoriesFragment : BaseFragment() {
     // Thay đổi onResume để tránh refresh ngay lập tức
     override fun onResume() {
         super.onResume()
-
-        // Khôi phục trạng thái SearchView dựa trên isSearchActive từ ViewModel
+        
+        // Khôi phục trạng thái SearchView
         viewModel.isSearchActive.value.let { isActive ->
             if (isActive) {
                 if (binding.searchView.visibility != View.VISIBLE) {
@@ -255,23 +257,9 @@ class AllCategoriesFragment : BaseFragment() {
                 binding.toolbar.title = "Find Your Category"
             }
         }
-
-        if (::allCategoriesAdapter.isInitialized &&
-            allCategoriesAdapter.itemCount == 0
-        ) {
-
-            // Làm mới dữ liệu khi quay lại fragment
-            viewModel.refreshCategories()
-
-            // Delay nhỏ để animation hoàn tất trước khi hiển thị dữ liệu
-            viewLifecycleOwner.lifecycleScope.launch {
-                delay(100)
-                // Hiển thị RecyclerView nếu nó đang bị ẩn
-                if (binding.rcvAllCategories.visibility != View.VISIBLE) {
-                    binding.rcvAllCategories.visibility = View.VISIBLE
-                }
-            }
-        }
+        
+        // Quan trọng: Refresh dữ liệu mỗi khi fragment được hiển thị lại
+        viewModel.refreshCategories()
     }
 
     override fun cleanupViewReferences() {

@@ -228,11 +228,11 @@ class AllDoctorsFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        if (!isFirstLoad) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                delay(300) // Đợi animation chuyển màn hình hoàn tất
-                viewModel.checkAndRefreshIfNeeded()
-            }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Một delay nhỏ để tránh hiệu ứng giật
+            delay(100)
+            viewModel.refreshDoctors()
         }
     }
 
