@@ -75,7 +75,7 @@
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/grayish_green_oval_border"
                 android:contentDescription="@string/cd_notification_button"
-                android:src="@drawable/notification"
+                android:src="@drawable/bell_icon"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />

@@ -7,6 +7,9 @@ import android.view.View
 import android.view.animation.Animation
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.healthtech.doccareplus.databinding.ViewLoadingBinding
+import com.healthtech.doccareplus.utils.AnimationUtils
+import com.healthtech.doccareplus.utils.AnimationUtils.hideWithAnimation
+import com.healthtech.doccareplus.utils.AnimationUtils.showWithAnimation
 
 class LoadingView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -32,10 +35,20 @@ class LoadingView @JvmOverloads constructor(
     fun setLoading(isLoading: Boolean) {
         if (isLoading) {
             visibility = View.VISIBLE
+            showWithAnimation(
+                duration = 300,
+                type = AnimationUtils.AnimationType.SCALE
+            )
             binding.lottieAnimation.playAnimation()
         } else {
-            binding.lottieAnimation.pauseAnimation()
-            visibility = View.GONE
+            hideWithAnimation(
+                duration = 300,
+                type = AnimationUtils.AnimationType.SCALE,
+                onEnd = {
+                    binding.lottieAnimation.pauseAnimation()
+                    visibility = View.GONE
+                }
+            )
         }
     }
 

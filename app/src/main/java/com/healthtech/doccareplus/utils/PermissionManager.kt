@@ -34,7 +34,7 @@ class PermissionManager {
         val PHONE_CALL_PERMISSIONS = arrayOf(
             Manifest.permission.CALL_PHONE
         )
-        
+
         val NOTIFICATION_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arrayOf(Manifest.permission.POST_NOTIFICATIONS)
         } else {
@@ -52,7 +52,11 @@ class PermissionManager {
             return true
         }
 
-        fun requestPermissions(activity: Activity, permissions: Array<String>, requestCode: Int = PERMISSION_REQUEST_CODE) {
+        fun requestPermissions(
+            activity: Activity,
+            permissions: Array<String>,
+            requestCode: Int = PERMISSION_REQUEST_CODE
+        ) {
             ActivityCompat.requestPermissions(
                 activity,
                 permissions,
@@ -81,7 +85,8 @@ class PermissionManager {
                     Manifest.permission.POST_NOTIFICATIONS
                 ) == PackageManager.PERMISSION_GRANTED
             } else {
-                true // Với Android < 13, không cần xin quyền rõ ràng
+                // Với Android < 13, không cần xin quyền rõ ràng
+                true
             }
         }
     }

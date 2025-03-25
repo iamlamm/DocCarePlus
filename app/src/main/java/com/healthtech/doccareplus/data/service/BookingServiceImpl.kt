@@ -260,7 +260,7 @@ class BookingServiceImpl @Inject constructor(
         )
 
         // Tạo map của tất cả cập nhật trong một lần transaction
-        val updates = hashMapOf<String, Any>(
+        val updates = hashMapOf(
             // Chi tiết cuộc hẹn
             "appointments/details/$appointmentKey" to appointment,
 

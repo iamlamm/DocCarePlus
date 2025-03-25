@@ -21,7 +21,7 @@ class CloudinaryServiceImpl @Inject constructor(
 ) : CloudinaryService {
 
     override fun uploadImage(
-        imageUri: Uri, 
+        imageUri: Uri,
         folder: String,
         fileName: String?,
         overwrite: Boolean
@@ -31,18 +31,15 @@ class CloudinaryServiceImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-        
+
         trySend(CloudinaryUploadState.Loading())
-        
-        // Tạo tên file nếu không được chỉ định
+
         val finalFileName = fileName ?: "img_${UUID.randomUUID()}"
-        
+
         try {
-            // Thay thế kiểm tra MediaManager.exists() bằng cách an toàn hơn
             try {
-                // Nếu MediaManager.get() không ném ra exception, tức là đã được khởi tạo
                 val mediaManager = MediaManager.get()
-                
+
                 mediaManager.upload(imageUri)
                     .option("public_id", finalFileName)
                     .option("folder", folder)
@@ -51,7 +48,7 @@ class CloudinaryServiceImpl @Inject constructor(
                         override fun onStart(requestId: String) {
                             Timber.d("Bắt đầu tải lên Cloudinary: $requestId")
                         }
-                        
+
                         override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
                             val progressPercent = if (totalBytes > 0) {
                                 ((bytes.toDouble() / totalBytes) * 100).toInt()
@@ -60,28 +57,30 @@ class CloudinaryServiceImpl @Inject constructor(
                             }
                             trySend(CloudinaryUploadState.Loading(progressPercent))
                         }
-                        
+
                         override fun onSuccess(requestId: String, resultData: Map<*, *>) {
                             val imageUrl = resultData["secure_url"] as String
                             Timber.d("Tải lên thành công: $imageUrl")
                             trySend(CloudinaryUploadState.Success(imageUrl))
                             close()
                         }
-                        
+
                         override fun onError(requestId: String, error: ErrorInfo) {
                             Timber.e("Lỗi tải lên Cloudinary: ${error.description}")
-                            trySend(CloudinaryUploadState.Error(error.description ?: "Lỗi không xác định khi tải lên"))
+                            trySend(
+                                CloudinaryUploadState.Error(
+                                    error.description ?: "Lỗi không xác định khi tải lên"
+                                )
+                            )
                             close()
                         }
-                        
+
                         override fun onReschedule(requestId: String, error: ErrorInfo) {
-                            // Cloudinary sẽ tự động thử lại
                             Timber.d("Lên lịch lại: ${error.description}")
                         }
                     })
                     .dispatch()
             } catch (e: IllegalStateException) {
-                // MediaManager chưa được khởi tạo
                 Timber.e("Cloudinary chưa được khởi tạo: ${e.message}")
                 trySend(CloudinaryUploadState.Error("Cloudinary chưa được khởi tạo. Vui lòng khởi động lại ứng dụng."))
                 close()
@@ -91,7 +90,7 @@ class CloudinaryServiceImpl @Inject constructor(
             trySend(CloudinaryUploadState.Error(e.message ?: "Lỗi không xác định"))
             close()
         }
-        
+
         awaitClose {
             Timber.d("Đóng flow upload Cloudinary")
         }

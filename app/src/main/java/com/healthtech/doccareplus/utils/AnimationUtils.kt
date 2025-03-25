@@ -1,85 +1,267 @@
-package  com.healthtech.doccareplusadmin.utils
+package com.healthtech.doccareplus.utils
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ObjectAnimator
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 
 object AnimationUtils {
 
-    // Xử lý animation mượt mà khi show một view
-    fun View.showWithAnimation(duration: Long = 400) {
-        alpha = 0f
-        scaleX = 0.92f
-        scaleY = 0.92f
-        visibility = View.VISIBLE
-
-        animate()
-            .alpha(1f)
-            .scaleX(1f)
-            .scaleY(1f)
-            .setDuration(duration)
-            .setInterpolator(DecelerateInterpolator(1.5f))
-            .start()
+    // Thêm các kiểu animation
+    enum class AnimationType {
+        FADE,
+        SCALE,
+        SLIDE_UP,
+        SLIDE_DOWN,
+        SLIDE_LEFT,
+        SLIDE_RIGHT
     }
 
-    // Xử lý animation mượt mà khi hide một view
-    fun View.hideWithAnimation(duration: Long = 400, onEnd: () -> Unit = {}) {
-        animate()
-            .alpha(0f)
-            .scaleX(0.92f)
-            .scaleY(0.92f)
-            .setDuration(duration)
-            .setInterpolator(AccelerateDecelerateInterpolator())
-            .withEndAction {
-                visibility = View.GONE
-                onEnd()
-            }
-            .start()
-    }
-
-    // Thêm các animation mới từ SplashFragment
-    fun View.fadeIn(
-        duration: Long = 800,
-        delay: Long = 0,
-        onEnd: () -> Unit = {}
-    ) {
-        alpha = 0f
-        ObjectAnimator.ofFloat(this, "alpha", 0f, 1f).apply {
-            this.duration = duration
-            startDelay = delay
-            interpolator = AccelerateDecelerateInterpolator()
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    onEnd()
-                }
-            })
-            start()
-        }
-    }
-
-    fun View.fadeOut(
+    // Cải tiến hàm showWithAnimation với nhiều options hơn
+    fun View.showWithAnimation(
         duration: Long = 400,
+        type: AnimationType = AnimationType.FADE,
+        delay: Long = 0,
+        onStart: () -> Unit = {},
         onEnd: () -> Unit = {}
     ) {
-        ObjectAnimator.ofFloat(this, "alpha", 1f, 0f).apply {
-            this.duration = duration
-            interpolator = AccelerateDecelerateInterpolator()
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    onEnd()
-                }
-            })
-            start()
+        visibility = View.VISIBLE
+        
+        when (type) {
+            AnimationType.FADE -> {
+                alpha = 0f
+                animate()
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(DecelerateInterpolator(1.5f))
+                    .withStartAction { onStart() }
+                    .withEndAction { onEnd() }
+                    .start()
+            }
+            AnimationType.SCALE -> {
+                alpha = 0f
+                scaleX = 0.85f
+                scaleY = 0.85f
+                animate()
+                    .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(DecelerateInterpolator(1.5f))
+                    .withStartAction { onStart() }
+                    .withEndAction { onEnd() }
+                    .start()
+            }
+            AnimationType.SLIDE_UP -> {
+                alpha = 0f
+                translationY = height.toFloat()
+                animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(DecelerateInterpolator(1.5f))
+                    .withStartAction { onStart() }
+                    .withEndAction { onEnd() }
+                    .start()
+            }
+            AnimationType.SLIDE_DOWN -> {
+                alpha = 0f
+                translationY = -height.toFloat()
+                animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(DecelerateInterpolator(1.5f))
+                    .withStartAction { onStart() }
+                    .withEndAction { onEnd() }
+                    .start()
+            }
+            AnimationType.SLIDE_LEFT -> {
+                alpha = 0f
+                translationX = width.toFloat()
+                animate()
+                    .alpha(1f)
+                    .translationX(0f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(DecelerateInterpolator(1.5f))
+                    .withStartAction { onStart() }
+                    .withEndAction { onEnd() }
+                    .start()
+            }
+            AnimationType.SLIDE_RIGHT -> {
+                alpha = 0f
+                translationX = -width.toFloat()
+                animate()
+                    .alpha(1f)
+                    .translationX(0f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(DecelerateInterpolator(1.5f))
+                    .withStartAction { onStart() }
+                    .withEndAction { onEnd() }
+                    .start()
+            }
         }
     }
 
-    // Animation cho nhiều view cùng lúc
-    fun fadeInSequentially(vararg views: View, delayBetween: Long = 300) {
-        views.forEachIndexed { index, view ->
-            view.fadeIn(delay = index * delayBetween)
+    // Cải tiến hàm hideWithAnimation tương tự
+    fun View.hideWithAnimation(
+        duration: Long = 400,
+        type: AnimationType = AnimationType.FADE,
+        delay: Long = 0,
+        onStart: () -> Unit = {},
+        onEnd: () -> Unit = {}
+    ) {
+        when (type) {
+            AnimationType.FADE -> {
+                animate()
+                    .alpha(0f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .withStartAction { onStart() }
+                    .withEndAction {
+                        visibility = View.GONE
+                        onEnd()
+                    }
+                    .start()
+            }
+            AnimationType.SCALE -> {
+                animate()
+                    .alpha(0f)
+                    .scaleX(0.85f)
+                    .scaleY(0.85f)
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .withStartAction { onStart() }
+                    .withEndAction {
+                        visibility = View.GONE
+                        onEnd()
+                    }
+                    .start()
+            }
+            AnimationType.SLIDE_UP -> {
+                animate()
+                    .alpha(0f)
+                    .translationY(-height.toFloat())
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .withStartAction { onStart() }
+                    .withEndAction {
+                        visibility = View.GONE
+                        translationY = 0f // Reset position
+                        onEnd()
+                    }
+                    .start()
+            }
+            AnimationType.SLIDE_DOWN -> {
+                animate()
+                    .alpha(0f)
+                    .translationY(height.toFloat())
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .withStartAction { onStart() }
+                    .withEndAction {
+                        visibility = View.GONE
+                        translationY = 0f // Reset position
+                        onEnd()
+                    }
+                    .start()
+            }
+            AnimationType.SLIDE_LEFT -> {
+                animate()
+                    .alpha(0f)
+                    .translationX(-width.toFloat())
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .withStartAction { onStart() }
+                    .withEndAction {
+                        visibility = View.GONE
+                        translationX = 0f // Reset position
+                        onEnd()
+                    }
+                    .start()
+            }
+            AnimationType.SLIDE_RIGHT -> {
+                animate()
+                    .alpha(0f)
+                    .translationX(width.toFloat())
+                    .setDuration(duration)
+                    .setStartDelay(delay)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .withStartAction { onStart() }
+                    .withEndAction {
+                        visibility = View.GONE
+                        translationX = 0f // Reset position
+                        onEnd()
+                    }
+                    .start()
+            }
         }
+    }
+
+    // Cải tiến fadeInSequentially với nhiều options hơn
+    fun fadeInSequentially(
+        views: List<View>,
+        duration: Long = 800,
+        delayBetween: Long = 300,
+        type: AnimationType = AnimationType.FADE,
+        onAllComplete: () -> Unit = {}
+    ) {
+        var totalDelay = 0L
+        views.forEachIndexed { index, view ->
+            view.showWithAnimation(
+                duration = duration,
+                type = type,
+                delay = totalDelay,
+                onEnd = {
+                    if (index == views.size - 1) {
+                        onAllComplete()
+                    }
+                }
+            )
+            totalDelay += delayBetween
+        }
+    }
+
+    // Thêm hàm mới để animate một group views
+    fun animateViewGroup(
+        views: List<View>,
+        type: AnimationType = AnimationType.FADE,
+        duration: Long = 400,
+        stagger: Long = 100,
+        onAllComplete: () -> Unit = {}
+    ) {
+        views.forEachIndexed { index, view ->
+            view.showWithAnimation(
+                duration = duration,
+                type = type,
+                delay = index * stagger,
+                onEnd = {
+                    if (index == views.size - 1) {
+                        onAllComplete()
+                    }
+                }
+            )
+        }
+    }
+
+    // Thêm hàm tiện ích để reset trạng thái animation
+    fun View.resetAnimation() {
+        alpha = 1f
+        scaleX = 1f
+        scaleY = 1f
+        translationX = 0f
+        translationY = 0f
+        rotation = 0f
+        clearAnimation()
     }
 }

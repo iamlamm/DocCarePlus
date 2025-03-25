@@ -14,7 +14,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentLoginBinding
 import com.healthtech.doccareplus.ui.home.HomeActivity
@@ -116,7 +115,7 @@ class LoginFragment : Fragment() {
 //                        binding.progressBarLogin.visibility = View.GONE
                         binding.progressBarLogin.setLoading(false)
                         binding.btnLoginSubmit.isEnabled = true
-                        
+
                         // Chuyển đến màn hình chính
                         val intent = Intent(requireContext(), HomeActivity::class.java)
                         startActivity(intent)

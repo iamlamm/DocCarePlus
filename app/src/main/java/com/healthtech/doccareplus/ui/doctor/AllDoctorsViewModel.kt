@@ -183,7 +183,7 @@ class AllDoctorsViewModel @Inject constructor(
             try {
                 lastRefreshTime = System.currentTimeMillis()
                 _doctors.value = UiState.Loading
-                
+
                 val catId = _categoryId.value
                 if (catId != null) {
                     // Buộc tải lại dữ liệu bác sĩ theo category

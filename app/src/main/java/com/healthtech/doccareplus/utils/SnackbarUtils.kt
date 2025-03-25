@@ -25,47 +25,32 @@ object SnackbarUtils {
         type: SnackbarType = SnackbarType.SUCCESS,
         duration: Int = Snackbar.LENGTH_SHORT
     ) {
-        // Create basic Snackbar
         val snackbar = Snackbar.make(view, "", duration)
         val snackbarLayout = snackbar.view as Snackbar.SnackbarLayout
-        
-        // Center the Snackbar horizontally
+
         val params = snackbarLayout.layoutParams
         when (params) {
             is CoordinatorLayout.LayoutParams -> {
                 params.width = FrameLayout.LayoutParams.WRAP_CONTENT
                 params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
             }
+
             is FrameLayout.LayoutParams -> {
                 params.width = FrameLayout.LayoutParams.WRAP_CONTENT
                 params.gravity = Gravity.CENTER_HORIZONTAL or Gravity.BOTTOM
             }
         }
         snackbarLayout.layoutParams = params
-        
-        // Remove all default views
         snackbarLayout.removeAllViews()
-        
-        // Set background directly on the Snackbar view
         snackbarLayout.setBackgroundResource(type.backgroundRes)
-        
-        // Remove default padding
         snackbarLayout.setPadding(0, 0, 0, 0)
-        
-        // Inflate our custom layout
         val binding = CustomSnackbarBinding.inflate(LayoutInflater.from(view.context))
-        
-        // Configure the custom layout
         binding.lottieIcon.setAnimation(type.lottieRes)
         binding.tvMessage.text = message
-        
-        // Add our custom layout to the Snackbar
         snackbarLayout.addView(binding.root)
-        
         snackbar.show()
     }
 
-    // Convenience methods
     fun showSuccessSnackbar(
         view: View,
         message: String,

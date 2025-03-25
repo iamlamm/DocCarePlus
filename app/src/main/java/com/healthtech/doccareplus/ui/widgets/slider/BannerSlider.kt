@@ -8,6 +8,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.viewpager2.widget.ViewPager2
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.ViewBannerSliderBinding
+import com.healthtech.doccareplus.utils.AnimationUtils
+import com.healthtech.doccareplus.utils.AnimationUtils.showWithAnimation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -32,33 +34,29 @@ class BannerSlider @JvmOverloads constructor(
 
     private var currentPosition = 0
 
-    // Lazy initialize adapter để chỉ tạo khi cần
     private val sliderAdapter by lazy { SliderAdapter(emptyList()) }
     private var imageList = emptyList<Int>()
     private var isInitialized = false
 
-    // Coroutine management
     private var coroutineScope: CoroutineScope? = null
     private var autoSlideJob: Job? = null
 
-    // Constants
     companion object {
         private const val AUTO_SLIDE_DELAY = 3000L
-        private const val INFINITE_SCROLL_MULTIPLIER = 1000 // Đồng bộ với SliderAdapter
+        private const val INFINITE_SCROLL_MULTIPLIER = 1000
         private const val SCALE_FACTOR = 0.25f
         private const val MIN_ALPHA = 0.25f
     }
 
     init {
         initializeViewPager()
-        // Tạo coroutine scope mới khi view được khởi tạo
         coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     }
 
     private fun initializeViewPager() {
         binding.viewPager.apply {
             offscreenPageLimit = 1
-            adapter = sliderAdapter  // Set adapter ngay từ đầu
+            adapter = sliderAdapter
             setupPageTransformer()
         }
     }
@@ -78,39 +76,31 @@ class BannerSlider @JvmOverloads constructor(
     // }
 
     private fun ViewPager2.setupPageTransformer() {
-    val nextItemVisiblePx = resources.getDimensionPixelOffset(R.dimen.page_offset)
-    val currentItemHorizontalMarginPx = resources.getDimensionPixelOffset(R.dimen.page_margin)
-    val pageTranslationX = nextItemVisiblePx + currentItemHorizontalMarginPx
+        val nextItemVisiblePx = resources.getDimensionPixelOffset(R.dimen.page_offset)
+        val currentItemHorizontalMarginPx = resources.getDimensionPixelOffset(R.dimen.page_margin)
+        val pageTranslationX = nextItemVisiblePx + currentItemHorizontalMarginPx
 
-    setPageTransformer { page, position ->
-        page.apply {
-            // Làm mượt hơn bằng cách giảm mức độ thay đổi
-            val positionOffset = position * 0.8f // Giảm tác động của position
-            translationX = -pageTranslationX * positionOffset
-            
-            // Điều chỉnh scale và alpha để mượt hơn
-            val absPosition = kotlin.math.abs(position)
-            val scaleFactor = 1 - (SCALE_FACTOR * absPosition * 0.7f)
-            scaleY = scaleFactor
-            scaleX = 1f - (SCALE_FACTOR * absPosition * 0.3f) // Thêm nhẹ scaleX
-            
-            // Điều chỉnh alpha để mượt hơn
-            alpha = MIN_ALPHA + (1 - absPosition) * (1 - MIN_ALPHA)
-            
-            // Thêm rotation nhẹ
-            rotation = position * -1.5f // Góc xoay nhỏ để tạo chiều sâu
+        setPageTransformer { page, position ->
+            page.apply {
+                val positionOffset = position * 0.8f
+                translationX = -pageTranslationX * positionOffset
+
+                val absPosition = kotlin.math.abs(position)
+                val scaleFactor = 1 - (SCALE_FACTOR * absPosition * 0.7f)
+                scaleY = scaleFactor
+                scaleX = 1f - (SCALE_FACTOR * absPosition * 0.3f)
+                alpha = MIN_ALPHA + (1 - absPosition) * (1 - MIN_ALPHA)
+                rotation = position * -1.5f
+            }
         }
     }
-}
 
-    // Lưu vị trí hiện tại
     fun saveCurrentPosition() {
         if (imageList.isNotEmpty()) {
             currentPosition = binding.viewPager.currentItem
         }
     }
 
-    // Khôi phục vị trí đã lưu
     fun restorePosition() {
         if (imageList.isNotEmpty()) {
             binding.viewPager.setCurrentItem(currentPosition, false)
@@ -121,17 +111,14 @@ class BannerSlider @JvmOverloads constructor(
     fun reinitialize() {
         if (imageList.isEmpty()) return
 
-        // Tạo lại coroutineScope nếu nó đã bị hủy
         if (coroutineScope == null) {
             coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
         }
 
-        // Khởi tạo lại ViewPager và adapter
         binding.viewPager.adapter = sliderAdapter
         sliderAdapter.updateImages(imageList)
 
-        // Thiết lập lại các thông số
-        setupInitialPosition(true) // Sử dụng true để khôi phục vị trí
+        setupInitialPosition(true)
         setupIndicator()
         startAutoSlide()
 
@@ -144,7 +131,6 @@ class BannerSlider @JvmOverloads constructor(
 
         imageList = images
 
-        // Luôn đảm bảo adapter được gán
         if (binding.viewPager.adapter == null) {
             binding.viewPager.adapter = sliderAdapter
         }
@@ -153,17 +139,14 @@ class BannerSlider @JvmOverloads constructor(
         setupInitialPosition(restoreLastPosition)
         setupIndicator()
 
-        // Đảm bảo hiển thị
         visibility = View.VISIBLE
         isInitialized = true
 
-        // Khởi động auto slide
         startAutoSlide()
     }
 
     private fun setupInitialPosition(restoreLastPosition: Boolean) {
         val startPosition = if (restoreLastPosition && currentPosition > 0) {
-            // Giữ nguyên vị trí cũ thay vì reset về 0
             currentPosition
         } else {
             (imageList.size * INFINITE_SCROLL_MULTIPLIER) / 2
@@ -177,31 +160,25 @@ class BannerSlider @JvmOverloads constructor(
             createIndicators(imageList.size, binding.viewPager.currentItem % imageList.size)
         }
 
-        // Đảm bảo chỉ add callback một lần
         binding.viewPager.unregisterOnPageChangeCallback(pageChangeCallback)
         binding.viewPager.registerOnPageChangeCallback(pageChangeCallback)
     }
 
-    // Tách callback ra để unregister khi cần
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
             if (imageList.isNotEmpty()) {
                 binding.indicator.animatePageSelected(position % imageList.size)
-                // Lưu vị trí hiện tại vào biến để phục hồi sau này
                 currentPosition = position
             }
         }
     }
 
     fun prepareForReuse() {
-        // Đảm bảo hiển thị ngay lập tức không cần khởi tạo lại
         visibility = View.VISIBLE
 
         if (imageList.isNotEmpty()) {
-            // Khôi phục vị trí đã lưu (nếu có)
             restorePosition()
-            // Chỉ khởi động lại auto slide, tránh các thao tác nặng khác
             startAutoSlide()
         }
     }
@@ -222,19 +199,13 @@ class BannerSlider @JvmOverloads constructor(
 
     fun restartSlider() {
         if (imageList.isEmpty()) return
-
-        // Đảm bảo hiển thị
         visibility = View.VISIBLE
-
-        // Nếu adapter đã bị hủy, cần khởi tạo lại
         if (binding.viewPager.adapter == null) {
             binding.viewPager.adapter = sliderAdapter
             sliderAdapter.updateImages(imageList)
-            setupInitialPosition(true) // Sử dụng true để khôi phục vị trí
+            setupInitialPosition(true)
             setupIndicator()
         }
-
-        // Khởi động lại auto slide
         startAutoSlide()
         isInitialized = true
     }
@@ -255,18 +226,25 @@ class BannerSlider @JvmOverloads constructor(
     }
 
     override fun onDetachedFromWindow() {
-        // Chỉ dừng auto slide, KHÔNG hủy coroutineScope để giữ trạng thái
         stopAutoSlide()
         super.onDetachedFromWindow()
     }
 
     fun cleanupResources(fullCleanup: Boolean = false) {
         stopAutoSlide()
-        // Chỉ hủy tài nguyên khi thực sự cần thiết
         if (fullCleanup) {
             coroutineScope?.cancel()
             coroutineScope = null
             isInitialized = false
+        }
+    }
+
+    private fun setupSlideAnimation() {
+        binding.viewPager.apply {
+            showWithAnimation(
+                duration = 800,
+                type = AnimationUtils.AnimationType.FADE
+            )
         }
     }
 }

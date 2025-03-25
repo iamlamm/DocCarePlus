@@ -2,7 +2,6 @@ package com.healthtech.doccareplus.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.healthtech.doccareplus.data.local.converter.TimePeriodConverter
 import com.healthtech.doccareplus.data.local.dao.CategoryDao
@@ -11,9 +10,8 @@ import com.healthtech.doccareplus.data.local.dao.TimeSlotDao
 import com.healthtech.doccareplus.data.local.entity.CategoryEntity
 import com.healthtech.doccareplus.data.local.entity.DoctorEntity
 import com.healthtech.doccareplus.data.local.entity.TimeSlotEntity
-import com.healthtech.doccareplus.domain.model.TimePeriod
 
-/*
+/**
 Trong Room Database, ta cần một class mở rộng RoomDatabase để quản lý các bảng (entities) và các DAO.
 @Database(entities = [CategoryEntity::class], version = 1) → Chỉ định bảng (table) nào sẽ được lưu trong database.
 Kế thừa từ RoomDatabase → Đây là lớp trừu tượng, Room sẽ tự động triển khai khi database được tạo.

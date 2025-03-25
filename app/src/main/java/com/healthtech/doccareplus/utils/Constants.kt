@@ -17,6 +17,6 @@ object Constants {
     const val STRIPE_PUBLISHABLE_KEY =
         "pk_test_51R23x4KkAysrBYlnA78x75l1mJmUL64GBerzqgd5LTzPzm6J01buqWryUXitfqEn6dEutdH02QMnoqpTUyzoz0tI00DODh1lf3"
 
-    //    const val BACKEND_URL = "http://192.168.136.102:3000"
-    const val BACKEND_URL = "http://192.168.1.15:3000"
+    const val BACKEND_URL = "http://192.168.136.102:3000"
+//    const val BACKEND_URL = "http://192.168.1.15:3000"
 }

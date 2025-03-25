@@ -63,8 +63,6 @@ class AuthRepositoryImpl @Inject constructor(
     ): Result<Unit> {
         return try {
             val result = authApi.updateEmail(currentPassword, newEmail)
-            // Không cập nhật local storage ngay lập tức
-            // Chỉ cập nhật khi email đã được xác thực
             result
         } catch (e: Exception) {
             Result.failure(e)
@@ -86,26 +84,6 @@ class AuthRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-
-//    override suspend fun getCurrentUser(): Result<User> {
-//        return try {
-//            val localUser = userPreferences.getUser()
-//            if (localUser != null) {
-//                Result.success(localUser)
-//            }
-//
-//            val remoteResult = authApi.fetchCurrentUser()
-//            if (remoteResult.isSuccess) {
-//                val remoteUser = remoteResult.getOrNull()
-//                if (remoteUser != null && remoteUser != localUser) {
-//                    userPreferences.saveUser(remoteUser)
-//                }
-//            }
-//            remoteResult
-//        } catch (e: Exception) {
-//            Result.failure(e)
-//        }
-//    }
 
     override fun logout() {
         ZIMKit.disconnectUser()

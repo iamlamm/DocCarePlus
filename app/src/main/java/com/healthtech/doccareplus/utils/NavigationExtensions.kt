@@ -1,7 +1,14 @@
 package com.healthtech.doccareplus.utils
 
-import android.util.Log
+import android.view.View
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
+import androidx.navigation.fragment.findNavController
+import com.healthtech.doccareplus.utils.AnimationUtils.hideWithAnimation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
  * Thực hiện navigation an toàn cho fragment-to-fragment navigation,
@@ -13,13 +20,10 @@ fun NavController.safeNavigate(actionId: Int) {
         if (action != null) {
             navigate(actionId)
         } else {
-            Log.w(
-                "Navigation",
-                "Action $actionId không tồn tại ở destination: ${currentDestination?.label}"
-            )
+            Timber.w("Action $actionId không tồn tại ở destination: ${currentDestination?.label}")
         }
     } catch (e: Exception) {
-        Log.e("Navigation", "Không thể navigate: ${e.message}")
+        Timber.e("Không thể navigate: ${e.message}")
     }
 }
 
@@ -31,6 +35,33 @@ fun NavController.safeNavigateGlobal(destinationId: Int) {
     try {
         navigate(destinationId)
     } catch (e: Exception) {
-        Log.e("Navigation", "Không thể navigate đến destination: ${e.message}")
+        Timber.e("Không thể navigate đến destination: ${e.message}")
+    }
+}
+
+// Extension function mới, đơn giản hóa
+fun Fragment.animateThenNavigate(
+    actionId: Int,
+    exitViews: List<View>,
+    duration: Long = 300,
+    preloadAction: (suspend () -> Unit)? = null
+) {
+    viewLifecycleOwner.lifecycleScope.launch {
+        // 1. Chạy preload nếu có
+        preloadAction?.invoke()
+        
+        // 2. Animate các view ra
+        exitViews.forEach { view ->
+            view.hideWithAnimation(
+                duration = duration,
+                type = AnimationUtils.AnimationType.FADE
+            )
+        }
+        
+        // 3. Đợi animation hoàn thành
+        delay(duration)
+        
+        // 4. Navigate
+        findNavController().safeNavigate(actionId)
     }
 }

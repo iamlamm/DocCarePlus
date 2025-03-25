@@ -8,5 +8,5 @@ interface CategoryLocalDataSource {
 
     suspend fun insertCategories(categories: List<CategoryEntity>)
 
-    suspend fun deleleAllCategories()
+    suspend fun deleteAllCategories()
 }

@@ -13,6 +13,8 @@ import androidx.navigation.fragment.findNavController
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentSplashBinding
 import com.healthtech.doccareplus.ui.home.HomeActivity
+import com.healthtech.doccareplus.utils.AnimationUtils
+import com.healthtech.doccareplus.utils.AnimationUtils.hideWithAnimation
 import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
@@ -34,41 +36,59 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupAnimation()
         binding.progressBarSplash.setLoading(true)
-//        binding.progressBarSplash.visibility = View.VISIBLE
         viewModel.preLoadHomeData()
         viewModel.preloadLoginResources()
         observeStartDestination()
+    }
+
+    private fun setupAnimation() {
+        binding.apply {
+            imageView.alpha = 0f
+            imageView2.alpha = 0f
+            progressBarSplash.alpha = 0f
+        }
+
+        AnimationUtils.fadeInSequentially(
+            views = listOf(
+                binding.imageView,
+                binding.imageView2,
+                binding.progressBarSplash
+            ),
+            duration = 1000,
+            delayBetween = 300,
+            type = AnimationUtils.AnimationType.FADE
+        )
     }
 
     private fun observeStartDestination() {
         viewLifecycleOwner.lifecycleScope.launch {
             val delayJob = launch { delay(3000) }
             delayJob.join()
+
             viewModel.startDestination.collectLatest { destination ->
                 if (destination != 0) {
-                    binding.progressBarSplash.setLoading(false)
-//                    binding.progressBarSplash.visibility = View.GONE
+                    val views = listOf(
+                        binding.progressBarSplash,
+                        binding.imageView2,
+                        binding.imageView
+                    )
 
+                    views.forEach { view ->
+                        view.hideWithAnimation(
+                            duration = 500,
+                            type = AnimationUtils.AnimationType.FADE
+                        )
+                    }
+                    delay(600)
+                    binding.progressBarSplash.setLoading(false)
                     when (destination) {
                         R.id.loginFragment -> {
-                            findNavController().safeNavigate(
-                                R.id.action_splash_to_login
-                            )
+                            findNavController().safeNavigate(R.id.action_splash_to_login)
                         }
 
                         R.id.homeFragment -> {
-//                            // Sử dụng Intent với FLAG_ACTIVITY_NO_ANIMATION
-//                            val intent = Intent(requireContext(), HomeActivity::class.java)
-//                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-//                            startActivity(intent)
-//
-//                            // Sử dụng overridePendingTransition để tránh hiệu ứng giật
-//                            requireActivity().overridePendingTransition(
-//                                R.anim.fade_in, R.anim.fade_out
-//                            )
-//                            requireActivity().finish()
-
                             val options = ActivityOptions.makeCustomAnimation(
                                 requireContext(),
                                 R.anim.ultra_smooth_fade_in,
@@ -83,7 +103,6 @@ class SplashFragment : Fragment() {
             }
         }
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

@@ -18,7 +18,6 @@ import com.healthtech.doccareplus.common.base.BaseFragment
 import com.healthtech.doccareplus.common.state.UiState
 import com.healthtech.doccareplus.databinding.FragmentAllDoctorsBinding
 import com.healthtech.doccareplus.ui.doctor.adapter.AllDoctorsAdapter
-import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -228,9 +227,8 @@ class AllDoctorsFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
-            // Một delay nhỏ để tránh hiệu ứng giật
             delay(100)
             viewModel.refreshDoctors()
         }

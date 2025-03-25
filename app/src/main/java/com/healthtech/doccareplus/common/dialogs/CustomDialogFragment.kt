@@ -1,5 +1,6 @@
 package com.healthtech.doccareplus.common.dialogs
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,6 +12,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.DialogCustomBinding
 
+@Suppress("DEPRECATION")
 class CustomDialogFragment : DialogFragment() {
     private var _binding: DialogCustomBinding? = null
     private val binding get() = _binding!!
@@ -51,6 +53,7 @@ class CustomDialogFragment : DialogFragment() {
         }
     }
 
+    @SuppressLint("UseGetLayoutInflater")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogCustomBinding.inflate(LayoutInflater.from(context))
 
@@ -116,7 +119,7 @@ class CustomDialogFragment : DialogFragment() {
                 dismiss()
             }
 
-            // Thiết lập nút negative (nếu có)
+            // Thiết lập nút negative
             val negativeText = args.getString(ARG_NEGATIVE_TEXT)
             if (!negativeText.isNullOrEmpty()) {
                 binding.btnDialogNegative.visibility = View.VISIBLE
@@ -131,7 +134,6 @@ class CustomDialogFragment : DialogFragment() {
         }
     }
 
-    // Setter cho callback
     fun setPositiveButtonCallback(callback: () -> Unit) {
         positiveButtonCallback = callback
     }

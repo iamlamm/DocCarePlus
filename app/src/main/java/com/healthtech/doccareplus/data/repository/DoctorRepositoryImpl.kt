@@ -1,18 +1,17 @@
 package com.healthtech.doccareplus.data.repository
 
-import android.util.Log
 import com.healthtech.doccareplus.data.local.datasource.impl.DoctorLocalDataSourceImpl
-import com.healthtech.doccareplus.domain.model.Doctor
 import com.healthtech.doccareplus.data.remote.datasource.impl.DoctorRemoteDataSourceImpl
 import com.healthtech.doccareplus.domain.mapper.toDoctor
 import com.healthtech.doccareplus.domain.mapper.toDoctorEntity
+import com.healthtech.doccareplus.domain.model.Doctor
 import com.healthtech.doccareplus.domain.repository.DoctorRepository
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
@@ -23,49 +22,6 @@ class DoctorRepositoryImpl @Inject constructor(
     private val remoteDataSource: DoctorRemoteDataSourceImpl,
     private val localDataSource: DoctorLocalDataSourceImpl
 ) : DoctorRepository {
-//    override fun observeDoctors(): Flow<Result<List<Doctor>>> = channelFlow {
-//        launch {
-//            try {
-//                // Local trước rồi mới đến remote
-//                localDataSource.getDoctors().catch { e ->
-//                    if (e !is CancellationException) {
-//                        send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
-//                    }
-//                }.map { listEntities ->
-//                    listEntities.map {
-//                        it.toDoctor()
-//                    }
-//                }.collect { listDoctors ->
-//                    if (listDoctors.isNotEmpty()) {
-//                        send(Result.success(listDoctors))
-//                    }
-//                }
-//            } catch (e: Exception) {
-//                send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
-//                Log.e("DoctorRepository", "Error loading local data", e)
-//            }
-//        }
-//
-//        launch {
-//            // Remote
-//            try {
-//                remoteDataSource.getDoctors().catch { e ->
-//                    if (e !is CancellationException) {
-//                        send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
-//                    }
-//                }.collect { listDoctors ->
-//                    localDataSource.insertDoctors(listDoctors.map { it.toDoctorEntity() })
-//                    send(Result.success(listDoctors))
-//                }
-//
-//            } catch (e: Exception) {
-//                send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
-//                Log.e("DoctorRepository", "Error fetching remote data", e)
-//            }
-//        }
-//
-//    }
-
     override fun observeDoctors(): Flow<Result<List<Doctor>>> = callbackFlow {
         try {
             localDataSource.getDoctors()
@@ -80,7 +36,6 @@ class DoctorRepositoryImpl @Inject constructor(
                         send(Result.success(localDoctors))
                     }
 
-                    // 2. After emitting local data, fetch remote data
                     try {
                         remoteDataSource.getDoctors()
                             .catch { e ->
@@ -89,67 +44,76 @@ class DoctorRepositoryImpl @Inject constructor(
                                 }
                             }
                             .collect { remoteDoctors ->
-                                // Compare with local data
-                                if (localDoctors != remoteDoctors) {
-                                    // Update local cache if different
-                                    localDataSource.insertDoctors(remoteDoctors.map { it.toDoctorEntity() })
-                                    // Emit new data
-                                    send(Result.success(remoteDoctors))
-                                }
+                                localDataSource.deleteAllDoctors()
+                                localDataSource.insertDoctors(remoteDoctors.map { it.toDoctorEntity() })
+                                send(Result.success(remoteDoctors))
                             }
                     } catch (e: Exception) {
-                        send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
-                        Log.e("DoctorRepository", "Error fetching remote data", e)
+                        if (e !is CancellationException) {
+                            send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                            Timber.tag("DoctorRepository").e(e, "Error fetching remote data")
+                        }
                     }
                 }
         } catch (e: Exception) {
-            send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
-            Log.e("DoctorRepository", "Error loading local data", e)
+            if (e !is CancellationException) {
+                send(Result.failure(Exception("Lỗi tổng quát: ${e.message}")))
+                Timber.tag("DoctorRepository").e(e, "General error")
+            }
+        }
+
+        awaitClose {
+            Timber.tag("DoctorRepository").d("DoctorRepository flow closed")
         }
     }
 
-    // Thêm phương thức lọc bác sĩ theo category
-    override fun getDoctorsByCategory(categoryId: Int): Flow<Result<List<Doctor>>> = channelFlow {
-        launch {
-            try {
-                // Đầu tiên emit dữ liệu local đã được lọc
-                localDataSource.getDoctors().catch { e ->
+    override fun getDoctorsByCategory(categoryId: Int): Flow<Result<List<Doctor>>> = callbackFlow {
+        try {
+            localDataSource.getDoctors()
+                .catch { e ->
                     if (e !is CancellationException) {
                         send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
                     }
-                }.map { listEntities ->
-                    // Lọc theo categoryId và chuyển đổi thành Doctor
+                }
+                .map { listEntities ->
                     listEntities.filter { it.categoryId == categoryId }
                         .map { it.toDoctor() }
-                }.collect { filteredDoctors ->
-                    if (filteredDoctors.isNotEmpty()) {
-                        send(Result.success(filteredDoctors))
+                }
+                .collect { filteredLocalDoctors ->
+                    if (filteredLocalDoctors.isNotEmpty()) {
+                        send(Result.success(filteredLocalDoctors))
+                    }
+
+                    try {
+                        remoteDataSource.getDoctors()
+                            .catch { e ->
+                                if (e !is CancellationException) {
+                                    send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                                }
+                            }
+                            .collect { remoteDoctors ->
+                                val filteredRemoteDoctors =
+                                    remoteDoctors.filter { it.categoryId == categoryId }
+
+                                send(Result.success(filteredRemoteDoctors))
+                            }
+                    } catch (e: Exception) {
+                        if (e !is CancellationException) {
+                            send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
+                            Timber.tag("DoctorRepository")
+                                .e(e, "Error fetching remote data by category")
+                        }
                     }
                 }
-            } catch (e: Exception) {
-                send(Result.failure(Exception("Lỗi khi tải dữ liệu local: ${e.message}")))
-                Log.e("DoctorRepository", "Error loading local data by category", e)
+        } catch (e: Exception) {
+            if (e !is CancellationException) {
+                send(Result.failure(Exception("Lỗi tổng quát: ${e.message}")))
+                Timber.tag("DoctorRepository").e(e, "General error in getDoctorsByCategory")
             }
         }
 
-        launch {
-            // Remote
-            try {
-                remoteDataSource.getDoctors().catch { e ->
-                    if (e !is CancellationException) {
-                        send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
-                    }
-                }.map { doctors ->
-                    // Lọc remote data theo categoryId
-                    doctors.filter { it.categoryId == categoryId }
-                }.collect { filteredDoctors ->
-                    // Không cần lưu lại vào local database vì đã được lưu đầy đủ bởi observeDoctors()
-                    send(Result.success(filteredDoctors))
-                }
-            } catch (e: Exception) {
-                send(Result.failure(Exception("Lỗi khi tải dữ liệu remote: ${e.message}")))
-                Log.e("DoctorRepository", "Error fetching remote data by category", e)
-            }
+        awaitClose {
+            Timber.d("DoctorRepository: getDoctorsByCategory flow closed")
         }
     }
 }

@@ -2,47 +2,44 @@ package com.healthtech.doccareplus.data.repository
 
 import com.healthtech.doccareplus.data.local.datasource.interfaces.TimeSlotLocalDataSource
 import com.healthtech.doccareplus.data.remote.datasource.interfaces.TimeSlotRemoteDataSource
-import com.healthtech.doccareplus.domain.model.TimePeriod
 import com.healthtech.doccareplus.domain.model.TimeSlot
 import com.healthtech.doccareplus.domain.repository.TimeSlotRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
+import timber.log.Timber
 import javax.inject.Inject
-import android.util.Log
 
 class TimeSlotRepositoryImpl @Inject constructor(
     private val localDataSource: TimeSlotLocalDataSource,
     private val remoteDataSource: TimeSlotRemoteDataSource
 ) : TimeSlotRepository {
-
     override fun observeTimeSlots(): Flow<Result<List<TimeSlot>>> = flow {
         try {
-            Log.d("Repository", "Starting to observe time slots")
-            
-            // Emit local data first (nếu có)
+            Timber.d("Starting to observe time slots")
+
             val localSlots = localDataSource.getAllTimeSlots().firstOrNull() ?: emptyList()
             if (localSlots.isNotEmpty()) {
-                Log.d("Repository", "Local time slots loaded: ${localSlots.size}")
+                Timber.d("Local time slots loaded: %s", localSlots.size)
                 emit(Result.success(localSlots))
             }
-            
-            // Luôn cố gắng lấy remote data
+
             try {
                 val remoteSlots = remoteDataSource.getAllTimeSlots().first()
-                Log.d("Repository", "Remote time slots received: ${remoteSlots.size}")
-                // Lưu vào local nếu cần
+                Timber.d("Remote time slots received: %s", remoteSlots.size)
                 if (remoteSlots.isNotEmpty()) {
                     localDataSource.saveTimeSlots(remoteSlots)
                 }
                 emit(Result.success(remoteSlots))
             } catch (e: Exception) {
-                Log.e("Repository", "Error loading remote slots: ${e.message}")
-                // Nếu đã emit local data thì không cần throw lỗi
+                Timber.e("Error loading remote slots: %s", e.message)
                 if (localSlots.isEmpty()) {
                     emit(Result.failure(e))
                 }
             }
         } catch (e: Exception) {
-            Log.e("Repository", "Error in observeTimeSlots: ${e.message}")
+            Timber.e("Error in observeTimeSlots: %s", e.message)
             emit(Result.failure(e))
         }
     }

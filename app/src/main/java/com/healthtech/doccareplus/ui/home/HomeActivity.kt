@@ -1,11 +1,9 @@
 package com.healthtech.doccareplus.ui.home
 
-import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -15,13 +13,14 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.ActivityHomeBinding
+import com.healthtech.doccareplus.utils.AnimationUtils.showWithAnimation
 import com.healthtech.doccareplus.utils.PermissionManager
-import com.healthtech.doccareplusadmin.utils.AnimationUtils.showWithAnimation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
@@ -82,7 +81,7 @@ class HomeActivity : AppCompatActivity() {
                     try {
                         viewModel.markNotificationAsRead(notificationId)
                     } catch (e: Exception) {
-                        Log.e("HomeActivity", "Error marking notification as read", e)
+                        Timber.e(e, "Error marking notification as read")
                     }
                 }
 
@@ -120,7 +119,7 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("HomeActivity", "Error handling notification intent", e)
+            Timber.e(e, "Error handling notification intent")
             Toast.makeText(this, "Có lỗi xảy ra khi mở thông báo", Toast.LENGTH_SHORT).show()
         }
     }
@@ -159,16 +158,11 @@ class HomeActivity : AppCompatActivity() {
                 navController.navigate(R.id.action_global_notification)
             }
 
-            // Đầu tiên, thiết lập click listener cho FAB
             fabCalendar.setOnClickListener {
-                // Preload dữ liệu nếu cần
                 viewModel.preloadAppointmentsScreen()
-
-                // Điều hướng đến màn hình cuộc hẹn
                 navController.navigate(R.id.action_global_appointments)
             }
 
-            // Sau đó, hiển thị FAB với animation (nếu cần)
             fabCalendar.showWithAnimation(duration = 2000)
         }
     }
@@ -215,7 +209,6 @@ class HomeActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.nav_home -> {
                     if (navController.currentDestination?.id != R.id.homeFragment) {
-                        // Quay về HomeFragment mà không tạo instance mới
                         navController.popBackStack(R.id.homeFragment, false)
                     }
                     true
@@ -258,7 +251,6 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        // Mặc định chọn tab home
         binding.bottomNav.selectedItemId = R.id.nav_home
     }
 
@@ -266,20 +258,19 @@ class HomeActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    fun hideAppBarAndBottomAppBar() {
+    private fun hideAppBarAndBottomAppBar() {
         binding.topBar.visibility = View.GONE
         binding.bottomAppBar.visibility = View.GONE
         binding.fabCalendar.visibility = View.GONE
     }
 
-    fun showAppBarAndBottomAppBar() {
+    private fun showAppBarAndBottomAppBar() {
         binding.topBar.visibility = View.VISIBLE
         binding.bottomAppBar.visibility = View.VISIBLE
         binding.fabCalendar.visibility = View.VISIBLE
     }
 
     private fun checkAndRequestNotificationPermission() {
-        // Kiểm tra phiên bản Android 13 (Tiramisu) trở lên
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (!PermissionManager.hasNotificationPermission(this)) {
                 PermissionManager.requestNotificationPermissions(this)
@@ -299,10 +290,9 @@ class HomeActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
                 ) {
-                    Log.d("Permissions", "Notification permission granted")
-                    // Cập nhật UI nếu cần
+                    Timber.tag("Permissions").d("Notification permission granted")
                 } else {
-                    Log.d("Permissions", "Notification permission denied")
+                    Timber.tag("Permissions").d("Notification permission denied")
                     Toast.makeText(
                         this,
                         "Bạn sẽ không nhận được thông báo về lịch hẹn",

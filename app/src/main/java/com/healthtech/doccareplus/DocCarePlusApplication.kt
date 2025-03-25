@@ -1,17 +1,16 @@
 package com.healthtech.doccareplus
 
+//import com.google.firebase.Firebase
+//import com.google.firebase.database.database
+//import com.google.firebase.initialize
 import android.app.Application
 import android.content.Context
 import com.cloudinary.android.MediaManager
 import com.google.firebase.FirebaseApp
-//import com.google.firebase.Firebase
-//import com.google.firebase.database.database
-//import com.google.firebase.initialize
 import com.healthtech.doccareplus.utils.Constants
 import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallConfig
 import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallService
 import com.zegocloud.uikit.prebuilt.call.config.ZegoNotificationConfig
-import com.zegocloud.uikit.prebuilt.call.core.invite.ZegoCallInvitationData
 import com.zegocloud.uikit.prebuilt.call.invite.ZegoUIKitPrebuiltCallInvitationConfig
 import com.zegocloud.uikit.prebuilt.call.invite.internal.ZegoUIKitPrebuiltCallConfigProvider
 import com.zegocloud.zimkit.services.ZIMKit
@@ -36,7 +35,6 @@ class DocCarePlusApplication : Application() {
     }
 
     private fun configureZegoCloud() {
-        // Khởi tạo ZIMKit
         val zimKitConfig = ZIMKitConfig()
         ZIMKit.initWith(this, Constants.APP_ID, Constants.APP_SIGN, zimKitConfig)
         ZIMKit.initNotifications()
@@ -52,7 +50,7 @@ class DocCarePlusApplication : Application() {
                 ZIMKit.connectUser(userId, userName, userAvatar) { error ->
                     if (error.code == ZIMErrorCode.SUCCESS) {
                         Timber.d("ZIMKit auto-reconnected on app launch")
-                    }else{
+                    } else {
                         Timber.e("Failed to connect ZIMKit: ${error.code}")
                     }
                 }
@@ -105,11 +103,11 @@ class DocCarePlusApplication : Application() {
                     endCallWhenInitiatorLeave = true
 
                     // Cung cấp config cho cuộc gọi
-                    provider = object : ZegoUIKitPrebuiltCallConfigProvider {
-                        override fun requireConfig(invitationData: ZegoCallInvitationData?): ZegoUIKitPrebuiltCallConfig {
+                    provider =
+                        ZegoUIKitPrebuiltCallConfigProvider { invitationData ->
                             val isVideoCall =
                                 invitationData?.type == com.zegocloud.uikit.plugin.invitation.ZegoInvitationType.VIDEO_CALL.value
-                            return if (isVideoCall) {
+                            if (isVideoCall) {
                                 ZegoUIKitPrebuiltCallConfig.oneOnOneVideoCall().apply {
                                     // Thêm cấu hình video call tùy chỉnh
                                     turnOnCameraWhenJoining = true
@@ -123,7 +121,6 @@ class DocCarePlusApplication : Application() {
                                 }
                             }
                         }
-                    }
                 }
             ZegoUIKitPrebuiltCallService.init(
                 this,

@@ -104,4 +104,8 @@
     <string name="create_account">Create Account</string>
     <string name="register_subtitle">Fill your information below</string>
     <string name="back_to_login_message">Remember your password?</string>
+    <string name="placeholder_book_appointment">Book Appointment ($50.99)</string>
+    <string name="action_chat">Chat</string>
+    <string name="action_voice_call">Voice Call</string>
+    <string name="action_video_call">Video Call</string>
 </resources>

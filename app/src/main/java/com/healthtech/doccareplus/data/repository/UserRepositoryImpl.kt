@@ -39,16 +39,13 @@ class UserRepositoryImpl @Inject constructor(
         return firebaseApi.observeUserAppointments(userId)
             .map { result ->
                 result.map { appointments ->
-                    // Thêm thông tin bác sĩ cho mỗi cuộc hẹn
-                    appointments.mapNotNull { appointment ->
+                    appointments.map { appointment ->
                         try {
-                            // Cố gắng lấy thông tin bác sĩ cho mỗi cuộc hẹn
                             val doctor = firebaseApi.getDoctor(appointment.doctorId).getOrNull()
                             if (doctor != null) {
-                                // Cập nhật thông tin bác sĩ trong cuộc hẹn
                                 appointment.copy(
                                     doctorName = doctor.name,
-                                    doctorAvatar = doctor.avatar ?: ""
+                                    doctorAvatar = doctor.avatar
                                 )
                             } else {
                                 appointment
@@ -63,9 +60,9 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateUserAvatar(avatarUrl: String): Result<Unit> {
-        val currentUserId = authApi.getCurrentUserId() 
+        val currentUserId = authApi.getCurrentUserId()
             ?: return Result.failure(Exception("Người dùng chưa đăng nhập"))
-        
+
         return firebaseApi.updateUserField(
             userId = currentUserId,
             fieldName = "avatar",
@@ -74,9 +71,9 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateUserProfile(user: User): Result<Unit> = runCatching {
-        val currentUserId = authApi.getCurrentUserId() 
+        val currentUserId = authApi.getCurrentUserId()
             ?: throw Exception("Người dùng chưa đăng nhập")
-        
+
         // Đảm bảo ID người dùng trong object trùng với ID đang đăng nhập
         if (user.id != currentUserId) {
             throw Exception("ID người dùng không hợp lệ")
@@ -84,41 +81,41 @@ class UserRepositoryImpl @Inject constructor(
 
         // Cập nhật tên
         firebaseApi.updateUserField(
-            userId = currentUserId, 
-            fieldName = "name", 
+            userId = currentUserId,
+            fieldName = "name",
             fieldValue = user.name
         ).getOrThrow()
-        
+
         // Cập nhật số điện thoại (nếu có)
-        user.phoneNumber?.let {
+        user.phoneNumber.let {
             firebaseApi.updateUserField(
                 userId = currentUserId,
                 fieldName = "phoneNumber",
                 fieldValue = it
             ).getOrThrow()
         }
-        
+
         // Cập nhật thông tin giới thiệu (about)
         firebaseApi.updateUserField(
             userId = currentUserId,
             fieldName = "about",
             fieldValue = user.about ?: ""
         ).getOrThrow()
-        
+
         // Cập nhật chiều cao (height)
         firebaseApi.updateUserField(
             userId = currentUserId,
             fieldName = "height",
             fieldValue = user.height ?: 0
         ).getOrThrow()
-        
+
         // Cập nhật cân nặng (weight)
         firebaseApi.updateUserField(
             userId = currentUserId,
             fieldName = "weight",
             fieldValue = user.weight ?: 0
         ).getOrThrow()
-        
+
         // Cập nhật tuổi (age)
         user.age?.let {
             firebaseApi.updateUserField(
@@ -127,7 +124,7 @@ class UserRepositoryImpl @Inject constructor(
                 fieldValue = it
             ).getOrThrow()
         }
-        
+
         // Cập nhật nhóm máu (bloodType)
         user.bloodType?.let {
             firebaseApi.updateUserField(
@@ -146,9 +143,8 @@ class UserRepositoryImpl @Inject constructor(
             ).getOrThrow()
         }
         
-        // Ghi log thành công
         Timber.d("Cập nhật thông tin người dùng thành công: ${user.name}")
-        
-        Unit
+
+//        Unit
     }
 }

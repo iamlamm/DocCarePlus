@@ -1,16 +1,12 @@
 package com.healthtech.doccareplus.ui.home
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.healthtech.doccareplus.R
@@ -22,10 +18,9 @@ import com.healthtech.doccareplus.ui.home.adapter.DoctorAdapter
 import com.healthtech.doccareplus.ui.widgets.decoration.CustomItemDecoration
 import com.healthtech.doccareplus.utils.safeNavigate
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @AndroidEntryPoint
 class HomeFragment : BaseFragment() {
@@ -33,8 +28,6 @@ class HomeFragment : BaseFragment() {
     private val binding get() = _binding!!
 
     val viewModel: HomeViewModel by viewModels()
-
-    // Khởi tạo adapter một lần trong vòng đời Fragment
     private val categoryAdapter by lazy { CategoryAdapter() }
     private val doctorAdapter by lazy { DoctorAdapter() }
 
@@ -49,10 +42,7 @@ class HomeFragment : BaseFragment() {
         R.drawable.banner_8
     )
 
-    // Biến theo dõi trạng thái đã thiết lập data observers
     private var hasSetupObservers = false
-
-    // Biến lưu trạng thái đã khởi tạo banner
     private var isBannerInitialized = false
 
     override fun onCreateView(
@@ -80,17 +70,17 @@ class HomeFragment : BaseFragment() {
 
             // Chỉ thiết lập observers một lần trong lifecycle của Fragment
             if (!hasSetupObservers) {
-                Log.d("HomeFragment", "Setting up data observers for the first time")
+                Timber.d("Setting up data observers for the first time")
                 observeData()
                 hasSetupObservers = true
             } else {
-                Log.d("HomeFragment", "Data observers already set up, skipping")
+                Timber.d("Data observers already set up, skipping")
             }
         }
     }
 
     private fun setupBannerSlider() {
-        Log.d("HomeFragment", "Initializing banner")
+        Timber.d("Initializing banner")
         binding.bannerSlider.setImages(bannerImages)
         isBannerInitialized = true
     }
@@ -141,9 +131,9 @@ class HomeFragment : BaseFragment() {
     private fun observeData() {
         viewModel.categories.collectWithLifecycle { state ->
             if (state is UiState.Loading) {
-                Log.d("HomeFragment", "Categories loading...")
+                Timber.d("Categories loading...")
             } else if (state is UiState.Success) {
-                Log.d("HomeFragment", "Categories loaded: ${state.data.size} items")
+                Timber.d("Categories loaded: " + state.data.size + " items")
             }
             handleUiState(
                 state = state,
@@ -154,9 +144,9 @@ class HomeFragment : BaseFragment() {
 
         viewModel.doctors.collectWithLifecycle { state ->
             if (state is UiState.Loading) {
-                Log.d("HomeFragment", "Doctors loading...")
+                Timber.d("Doctors loading...")
             } else if (state is UiState.Success) {
-                Log.d("HomeFragment", "Doctors loaded: ${state.data.size} items")
+                Timber.d("Doctors loaded: " + state.data.size + " items")
             }
             handleUiState(
                 state = state,
@@ -193,8 +183,6 @@ class HomeFragment : BaseFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("HomeFragment", "onDestroy called")
-        // Chỉ reset trạng thái nếu Fragment thực sự bị hủy, không phải khi view bị destroy
         hasSetupObservers = false
     }
 

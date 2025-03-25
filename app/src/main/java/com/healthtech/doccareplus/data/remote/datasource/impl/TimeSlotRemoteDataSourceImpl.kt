@@ -1,12 +1,10 @@
 package com.healthtech.doccareplus.data.remote.datasource.impl
 
-import com.google.firebase.database.FirebaseDatabase
 import com.healthtech.doccareplus.data.remote.api.FirebaseApi
 import com.healthtech.doccareplus.data.remote.datasource.interfaces.TimeSlotRemoteDataSource
-import com.healthtech.doccareplus.domain.model.TimePeriod
 import com.healthtech.doccareplus.domain.model.TimeSlot
-import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
 class TimeSlotRemoteDataSourceImpl @Inject constructor(
     private val firebaseApi: FirebaseApi

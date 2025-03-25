@@ -15,7 +15,7 @@ class CategoryLocalDataSourceImpl @Inject constructor(
         categoryDao.insertCategories(categories)
     }
 
-    override suspend fun deleleAllCategories() {
+    override suspend fun deleteAllCategories() {
         categoryDao.deleteAllCategories()
     }
 }

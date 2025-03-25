@@ -4,41 +4,40 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.graphics.Rect
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.healthtech.doccareplus.R
 import com.healthtech.doccareplus.databinding.FragmentDoctorProfileBinding
-import dagger.hilt.android.AndroidEntryPoint
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import android.graphics.Rect
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import com.healthtech.doccareplus.ui.doctor.adapter.CalendarAdapter
-import java.util.*
-import kotlinx.coroutines.launch
-import com.google.android.material.snackbar.Snackbar
-import com.healthtech.doccareplus.domain.model.TimeSlot
 import com.healthtech.doccareplus.domain.model.TimePeriod
-import android.util.Log
-import androidx.navigation.fragment.findNavController
+import com.healthtech.doccareplus.domain.model.TimeSlot
+import com.healthtech.doccareplus.ui.doctor.adapter.CalendarAdapter
+import com.healthtech.doccareplus.utils.Constants
 import com.healthtech.doccareplus.utils.SnackbarUtils
 import com.healthtech.doccareplus.utils.showErrorDialog
 import com.healthtech.doccareplus.utils.showInfoDialog
-import androidx.activity.OnBackPressedCallback
-import com.healthtech.doccareplus.utils.Constants
 import com.stripe.android.PaymentConfiguration
 import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.zegocloud.zimkit.common.ZIMKitRouter
 import com.zegocloud.zimkit.common.enums.ZIMKitConversationType
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.util.Calendar
 
 @AndroidEntryPoint
 class DoctorProfileFragment : Fragment() {
@@ -52,13 +51,9 @@ class DoctorProfileFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Khởi tạo Stripe SDK
         PaymentConfiguration.init(requireContext(), Constants.STRIPE_PUBLISHABLE_KEY)
-
-        // Khởi tạo PaymentSheet
         paymentSheet = PaymentSheet(this, ::onPaymentSheetResult)
-        
-        // Xử lý nút back
+
         requireActivity().onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -80,11 +75,9 @@ class DoctorProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // First thing - set the doctor ID
         val doctor = args.doctor
-        viewModel.setDoctorId(doctor.id.toString())
-        Log.d("DoctorProfileFragment", "Set doctor ID: ${doctor.id}")
-        
+        viewModel.setDoctorId(doctor.id)
+
         binding.rvCalendar.isNestedScrollingEnabled = false
         setupViews()
         setupTimeSlotChips()
@@ -116,7 +109,6 @@ class DoctorProfileFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.selectedTimeSlot.collect { timeSlot ->
                 timeSlot?.let {
-                    Log.d("SelectedTimeSlot", "Selected: ${it.startTime}-${it.endTime}")
                     binding.btnBookAppointment.isEnabled = true
                 } ?: run {
                     binding.btnBookAppointment.isEnabled = false
@@ -128,7 +120,6 @@ class DoctorProfileFragment : Fragment() {
     private fun observeTimeSlots() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.timeSlots.collect { timeSlots ->
-                Log.d("TimeSlots", "Received ${timeSlots.size} time slots")
                 updateTimeSlots(timeSlots)
             }
         }
@@ -152,7 +143,6 @@ class DoctorProfileFragment : Fragment() {
                 hideLoading()
                 binding.btnBookAppointment.isEnabled = true
                 showBookingSuccess(state.appointmentId)
-                // Navigate to appointment detail or confirmation screen
                 findNavController().navigate(
                     DoctorProfileFragmentDirections.actionDoctorProfileToSuccess(state.appointmentId)
                 )
@@ -187,9 +177,8 @@ class DoctorProfileFragment : Fragment() {
                     else -> showErrorDialog(message = state.message)
                 }
             }
-            
+
             is DoctorProfileState.InitiateChat -> {
-                // Xử lý chuyển đến màn hình chat
                 val action = DoctorProfileFragmentDirections.actionDoctorProfileToChat(
                     conversationId = state.doctorId,
                     title = state.doctorName
@@ -201,54 +190,53 @@ class DoctorProfileFragment : Fragment() {
                 showLoading()
                 binding.btnBookAppointment.isEnabled = false
             }
-            
+
             is DoctorProfileState.PaymentReady -> {
                 hideLoading()
                 presentPaymentSheet(state.paymentIntentClientSecret, state.customerConfig)
             }
-            
+
             is DoctorProfileState.PaymentComplete -> {
                 hideLoading()
                 binding.btnBookAppointment.isEnabled = true
                 showBookingSuccess(state.appointmentId)
-                // Navigate to appointment detail or confirmation screen
+
                 findNavController().navigate(
                     DoctorProfileFragmentDirections.actionDoctorProfileToSuccess(state.appointmentId)
                 )
             }
-            
+
             is DoctorProfileState.PaymentFailed -> {
                 hideLoading()
                 binding.btnBookAppointment.isEnabled = true
                 showErrorDialog(message = state.error)
             }
-            
+
             is DoctorProfileState.PaymentCancelled -> {
                 hideLoading()
                 binding.btnBookAppointment.isEnabled = true
-                Snackbar.make(binding.root, getString(R.string.payment_cancelled), Snackbar.LENGTH_SHORT).show()
+                SnackbarUtils.showErrorSnackbar(
+                    binding.root,
+                    getString(R.string.payment_cancelled)
+                )
             }
         }
     }
 
     private fun showLoading() {
-        binding.progressBarDoctorProfile.visibility = View.VISIBLE
+        binding.progressBarDoctorProfile.setLoading(true)
     }
 
     private fun hideLoading() {
-        binding.progressBarDoctorProfile.visibility = View.GONE
+        binding.progressBarDoctorProfile.setLoading(false)
     }
 
-    private fun showError(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
-    }
 
     private fun showBookingSuccess(appointmentId: String) {
-        Snackbar.make(
+        SnackbarUtils.showSuccessSnackbar(
             binding.root,
-            "Đặt lịch thành công! Mã cuộc hẹn: $appointmentId",
-            Snackbar.LENGTH_LONG
-        ).show()
+            "Đặt lịch thành công! Mã cuộc hẹn: $appointmentId"
+        )
     }
 
     /**
@@ -268,34 +256,30 @@ class DoctorProfileFragment : Fragment() {
         binding.apply {
             val currentPeriod = getSelectedPeriod()
 
-            Log.d("TimeSlots All: ", "$timeSlots")
+            Timber.tag("TimeSlots All: ").d(timeSlots.toString())
 
             val filteredSlots = timeSlots.filter { it.period == currentPeriod }
 
-            Log.d("TimeSlots", "Current period: $currentPeriod")
-            Log.d("TimeSlots", "All slots: ${timeSlots.size}, Filtered: ${filteredSlots.size}")
+            Timber.d("Current period: %s", currentPeriod)
+            Timber.d("All slots: " + timeSlots.size + ", Filtered: " + filteredSlots.size)
             filteredSlots.forEach { slot ->
-                Log.d("TimeSlots", "Filtered slot: ${slot.startTime}-${slot.endTime}")
+                Timber.d("Filtered slot: " + slot.startTime + "-" + slot.endTime)
             }
 
             val chips = listOf(chipSlot1, chipSlot2, chipSlot3, chipSlot4)
-            // Reset all chips
             chips.forEach { chip ->
                 chip.isChecked = false
                 chip.visibility = View.GONE
             }
 
-            // Update visible chips
             chips.forEachIndexed { index, chip ->
                 if (index < filteredSlots.size) {
                     val slot = filteredSlots[index]
                     chip.apply {
-                        // Sử dụng hàm formatTimeSlot để hiển thị text trên chip
                         text = formatTimeSlot(slot)
                         isEnabled = true
                         visibility = View.VISIBLE
                         tag = slot
-                        Log.d("TimeSlots", "Setting chip $index: ${formatTimeSlot(slot)}")
                     }
                 }
             }
@@ -349,21 +333,24 @@ class DoctorProfileFragment : Fragment() {
             setNavigationOnClickListener {
                 navigateBack()
             }
-            inflateMenu(R.menu.doctor_profile_menu)
+
             setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.action_chat -> {
                         startChatWithDoctor()
                         true
                     }
+
                     R.id.action_voice_call -> {
                         startVoiceCallWithDoctor()
                         true
                     }
+
                     R.id.action_video_call -> {
                         startVideoCallWithDoctor()
                         true
                     }
+
                     else -> false
                 }
             }
@@ -376,23 +363,23 @@ class DoctorProfileFragment : Fragment() {
 
     private fun startChatWithDoctor() {
         try {
-            // Chuyển đổi ID bác sĩ sang chuỗi
-            val doctorIdString = args.doctor.id.toString()
-            
-            // Gọi trực tiếp vào ZIMKit như trong ví dụ
+            val doctorId = args.doctor.id
+
             ZIMKitRouter.toMessageActivity(
                 requireContext(),
-                doctorIdString,
+                doctorId,
                 ZIMKitConversationType.ZIMKitConversationTypePeer
             )
         } catch (e: Exception) {
-            Log.e("DoctorProfileFragment", "Error starting chat: ${e.message}", e)
-            SnackbarUtils.showErrorSnackbar(binding.root, "Lỗi khi bắt đầu trò chuyện: ${e.message}")
+            Timber.e(e, "Error starting chat: " + e.message)
+            SnackbarUtils.showErrorSnackbar(
+                binding.root,
+                "Lỗi khi bắt đầu trò chuyện: ${e.message}"
+            )
         }
     }
 
     private fun startVoiceCallWithDoctor() {
-        // Tạm thời thông báo tính năng sắp có
         SnackbarUtils.showInfoSnackbar(
             binding.root,
             "Tính năng gọi điện sẽ sớm được cập nhật"
@@ -400,7 +387,6 @@ class DoctorProfileFragment : Fragment() {
     }
 
     private fun startVideoCallWithDoctor() {
-        // Tạm thời thông báo tính năng sắp có
         SnackbarUtils.showInfoSnackbar(
             binding.root,
             "Tính năng gọi video sẽ sớm được cập nhật"
@@ -410,7 +396,7 @@ class DoctorProfileFragment : Fragment() {
     @SuppressLint("SetTextI18n")
     private fun displayDoctorInfo() {
         binding.apply {
-            tvDoctorUid.text = args.doctor.id.toString()
+            tvDoctorUid.text = args.doctor.id
             tvDoctorName.text = args.doctor.name
             tvDoctorProfileSpecialty.text = args.doctor.specialty
             tvDoctorRate.text = args.doctor.rating.toString()
@@ -453,13 +439,12 @@ class DoctorProfileFragment : Fragment() {
         binding.apply {
             val chips = listOf(chipMorning, chipAfternoon, chipEvening)
 
-            // Set initial period
             val calendar = Calendar.getInstance()
             val hour = calendar.get(Calendar.HOUR_OF_DAY)
 
-            val selectedChip = when {
-                hour in 0..12 -> chipMorning
-                hour in 13..17 -> chipAfternoon
+            val selectedChip = when (hour) {
+                in 0..12 -> chipMorning
+                in 13..17 -> chipAfternoon
                 else -> chipEvening
             }
             selectedChip.isChecked = true
@@ -470,7 +455,6 @@ class DoctorProfileFragment : Fragment() {
             chips.forEach { chip ->
                 chip.setOnCheckedChangeListener { buttonView, isChecked ->
                     if (isChecked) {
-                        Log.d("TimeSlots", "Period chip changed: ${getSelectedPeriod()}")
                         chips.forEach { otherChip ->
                             if (otherChip != buttonView) otherChip.isChecked = false
                         }
@@ -506,14 +490,12 @@ class DoctorProfileFragment : Fragment() {
         chips.forEach { chip ->
             chip.setOnCheckedChangeListener { buttonView, isChecked ->
                 if (isChecked) {
-                    // Uncheck other chips
                     chips.forEach { otherChip ->
                         if (otherChip != buttonView) {
                             otherChip.isChecked = false
                         }
                     }
 
-                    // Get TimeSlot from chip's tag and update ViewModel
                     (buttonView.tag as? TimeSlot)?.let { slot ->
                         viewModel.setSelectedTimeSlot(slot)
                     }
@@ -527,8 +509,7 @@ class DoctorProfileFragment : Fragment() {
     private fun setupBookingButton() {
         binding.btnBookAppointment.setOnClickListener {
             val doctor = args.doctor
-            // Kiểm tra slot availability trước khi thanh toán
-            viewModel.setupBooking(doctor.id.toString(), doctor.fee)
+            viewModel.setupBooking(doctor.id, doctor.fee)
         }
     }
 
@@ -536,7 +517,10 @@ class DoctorProfileFragment : Fragment() {
         viewModel.handlePaymentResult(paymentSheetResult)
     }
 
-    private fun presentPaymentSheet(clientSecret: String, customerConfig: PaymentSheet.CustomerConfiguration) {
+    private fun presentPaymentSheet(
+        clientSecret: String,
+        customerConfig: PaymentSheet.CustomerConfiguration
+    ) {
         paymentSheet.presentWithPaymentIntent(
             clientSecret,
             PaymentSheet.Configuration(
