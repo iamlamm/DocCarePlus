@@ -19,7 +19,6 @@
     <string name="cd_notification_button">Notifications</string>
     <string name="cd_banner">Banner</string>
     <string name="cd_search_button">Search doctors</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="don_t_have_an_account_message">Don\'t have an account?</string>
     <string name="register">Register</string>
@@ -38,18 +37,20 @@
     <string name="nav_doctors_title">Doctors</string>
     <string name="nav_messages_title">Messages</string>
     <string name="nav_more_title">More</string>
-    <string name="verify_your_email">Xác thực Email</string>
-    <string name="verification_message">Chúng tôi đã gửi mã xác thực đến email của bạn. Vui lòng kiểm tra và nhập mã xác thực bên dưới.</string>
-    <string name="verification_code_hint">Nhập mã xác thực</string>
-    <string name="resend_code">Gửi lại mã</string>
-    <string name="verify">Xác thực</string>
-    <string name="time_remaining">Còn %d giây</string>
-    <string name="email_sent_to">Mã xác thực đã được gửi đến\n%s</string>
+    <string name="verify_your_email">Verify Email</string>
+    <string name="verification_message">We have sent a verification code to your email. Please check
+        and enter the verification code below.</string>
+    <string name="verification_code_hint">Enter verification code</string>
+    <string name="resend_code">Resend Code</string>
+    <string name="verify">Verify</string>
+    <string name="time_remaining">%d seconds remaining</string>
+    <string name="email_sent_to">Verification code has been sent to\n%s</string>
     <string name="invalid_email">Invalid email address</string>
     <string name="password_required">Password is required</string>
     <string name="invalid_name">Name must be at least 2 characters</string>
     <string name="invalid_phone">Invalid phone number</string>
-    <string name="invalid_password">Password must be at least 6 characters with uppercase, lowercase, number and special character</string>
+    <string name="invalid_password">Password must be at least 6 characters with uppercase,
+        lowercase, number and special character</string>
     <string name="passwords_not_match">Passwords do not match</string>
     <string name="email_required">Email is required</string>
     <string name="name_required">Full name is required</string>
@@ -57,7 +58,8 @@
     <string name="confirm_password_required">Please confirm your password</string>
     <string name="title_action_search">Search</string>
     <string name="forgot_password_title">Forgot Password?</string>
-    <string name="forgot_password_description">Enter your registered email address. We\'ll send you an email with instructions to reset your password.</string>
+    <string name="forgot_password_description">Enter your registered email address. We\'ll send you
+        an email with instructions to reset your password.</string>
     <string name="send_reset_password_email">Send Reset Link</string>
     <string name="remember_me">Remember me</string>
     <string name="forgot_password">Forgot Password?</string>
@@ -80,27 +82,28 @@
     <string name="format_profile_blood">%s</string>
     <string name="title_find_your_doctor">Find Your Doctor</string>
     <string name="doctor_biography_title">Doctor Biography</string>
-    <string name="placeholder_doctor_biography_content">Eion Morgan is a dedicated pediatrician with over 15 years of experience in caring for children\'s health. She is passionate about ensuring the well-being of your little ones and believes in a holistic approach.</string>
+    <string name="placeholder_doctor_biography_content">Eion Morgan is a dedicated pediatrician with
+        over 15 years of experience in caring for children\'s health. She is passionate about
+        ensuring the well-being of your little ones and believes in a holistic approach.</string>
     <string name="no_about_content">No bio yet</string>
-    <string name="error">Lỗi</string>
-    <string name="ok">Đã hiểu</string>
-    <string name="logout">Đăng xuất</string>
-    <string name="logout_confirmation">Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng?</string>
-    <string name="cancel">Hủy</string>
+    <string name="error">Error</string>
+    <string name="ok">OK</string>
+    <string name="logout">Logout</string>
+    <string name="logout_confirmation">Are you sure you want to logout?</string>
+    <string name="cancel">Cancel</string>
     <string name="uid_copied">UID copied</string>
     <string name="more_menu_logout">Logout</string>
     <string name="login_subtitle">Sign in to continue</string>
-    <string name="change_email">Thay đổi email</string>
-    <string name="current_password">Mật khẩu hiện tại</string>
-    <string name="new_email">Email mới</string>
-
-    <string name="payment_success">Thanh toán thành công!</string>
-    <string name="payment_failed">Thanh toán thất bại: %s</string>
-    <string name="payment_processing">Đang xử lý thanh toán...</string>
-    <string name="payment_cancelled">Thanh toán đã bị hủy</string>
-    <string name="proceed_to_payment">Tiến hành thanh toán</string>
-    <string name="no_appointments">Không có cuộc hẹn</string>
-    <string name="cd_back_button">Quay lại</string>
+    <string name="change_email">Change email</string>
+    <string name="current_password">Current password</string>
+    <string name="new_email">New email</string>
+    <string name="payment_success">Payment successful!</string>
+    <string name="payment_failed">Payment failed: %s</string>
+    <string name="payment_processing">Processing payment...</string>
+    <string name="payment_cancelled">Payment cancelled</string>
+    <string name="proceed_to_payment">Proceed to payment</string>
+    <string name="no_appointments">No appointments</string>
+    <string name="cd_back_button">Back</string>
     <string name="create_account">Create Account</string>
     <string name="register_subtitle">Fill your information below</string>
     <string name="back_to_login_message">Remember your password?</string>
@@ -108,4 +111,7 @@
     <string name="action_chat">Chat</string>
     <string name="action_voice_call">Voice Call</string>
     <string name="action_video_call">Video Call</string>
+    <string name="language_settings">Language</string>
+    <string name="language_dialog_title">Select Language</string>
+    <string name="current_language">Current Language</string>
 </resources>

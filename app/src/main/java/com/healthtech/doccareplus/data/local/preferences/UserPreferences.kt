@@ -3,6 +3,7 @@ package com.healthtech.doccareplus.data.local.preferences
 import android.content.Context
 import com.healthtech.doccareplus.domain.model.User
 import com.healthtech.doccareplus.domain.model.UserRole
+import com.healthtech.doccareplus.utils.Constants
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -74,4 +75,12 @@ class UserPreferences @Inject constructor(
                 sharedPreferences.getBoolean("remember_me", false)
     }
 
+    fun saveLanguage(languageCode: String) {
+        sharedPreferences.edit().putString("app_language", languageCode).apply()
+    }
+
+    fun getLanguage(): String {
+        return sharedPreferences.getString("app_language", Constants.DEFAULT_LANGUAGE) 
+            ?: Constants.DEFAULT_LANGUAGE
+    }
 }

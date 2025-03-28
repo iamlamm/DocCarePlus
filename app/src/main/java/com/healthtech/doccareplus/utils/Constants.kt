@@ -17,6 +17,11 @@ object Constants {
     const val STRIPE_PUBLISHABLE_KEY =
         "pk_test_51R23x4KkAysrBYlnA78x75l1mJmUL64GBerzqgd5LTzPzm6J01buqWryUXitfqEn6dEutdH02QMnoqpTUyzoz0tI00DODh1lf3"
 
-    const val BACKEND_URL = "http://192.168.136.102:3000"
-//    const val BACKEND_URL = "http://192.168.1.15:3000"
+    const val BACKEND_URL = "http://172.20.10.5:3000"
+//    const val BACKEND_URL = "http://172.20.10.7:3000"
+
+    // Language settings
+    const val DEFAULT_LANGUAGE = "vi"
+    const val LANGUAGE_ENGLISH = "en"
+    const val LANGUAGE_VIETNAMESE = "vi"
 }

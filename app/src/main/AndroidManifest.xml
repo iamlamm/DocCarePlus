@@ -22,7 +22,9 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission
+        android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:ignore="SelectedPhotoAccess" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -41,9 +43,10 @@
         android:theme="@style/Theme.DocCarePlus"
         android:usesCleartextTraffic="true"
         tools:ignore="SelectedPhotoAccess"
-        tools:targetApi="31">
+        tools:targetApi="tiramisu">
         <activity
             android:name=".ui.auth.AuthActivity"
+            android:configChanges="locale|layoutDirection"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -53,6 +56,7 @@
         </activity>
         <activity
             android:name=".ui.home.HomeActivity"
+            android:configChanges="locale|layoutDirection"
             android:exported="false" />
 
         <meta-data

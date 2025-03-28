@@ -12,19 +12,29 @@ import com.healthtech.doccareplus.databinding.FragmentMoreBinding
 import com.healthtech.doccareplus.domain.repository.AuthRepository
 import com.healthtech.doccareplus.ui.auth.AuthActivity
 import com.healthtech.doccareplus.utils.showWarningDialog
+import com.healthtech.doccareplus.data.local.preferences.UserPreferences
+import com.healthtech.doccareplus.DocCarePlusApplication
+import com.healthtech.doccareplus.common.dialogs.LanguageSelectionDialog
+import com.healthtech.doccareplus.utils.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class MoreFragment : Fragment() {
-    private var _binding: FragmentMoreBinding? = null
-    private val binding get() = _binding!!
-
     @Inject
     lateinit var authRepository: AuthRepository
 
+    @Inject
+    lateinit var userPreferences: UserPreferences
+
+    private var _binding: FragmentMoreBinding? = null
+    private val binding get() = _binding!!
+
+
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMoreBinding.inflate(inflater, container, false)
         return binding.root
@@ -33,6 +43,7 @@ class MoreFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
+        updateLanguageButtonText()
     }
 
     private fun setupClickListeners() {
@@ -51,6 +62,10 @@ class MoreFragment : Fragment() {
                         logout()
                     })
             }
+
+            btnLanguage.setOnClickListener {
+                showLanguageSelectionDialog()
+            }
         }
     }
 
@@ -62,6 +77,27 @@ class MoreFragment : Fragment() {
         requireActivity().finish()
     }
 
+    private fun showLanguageSelectionDialog() {
+        val currentLanguage = userPreferences.getLanguage()
+        LanguageSelectionDialog(requireContext(), currentLanguage) { selectedLanguage ->
+            userPreferences.saveLanguage(selectedLanguage)
+            (requireActivity().application as DocCarePlusApplication)
+                .updateLanguage(requireContext(), selectedLanguage)
+            
+            // Restart activity to apply changes
+            requireActivity().recreate()
+        }.show()
+    }
+
+    private fun updateLanguageButtonText() {
+        val currentLanguage = userPreferences.getLanguage()
+        val languageText = when (currentLanguage) {
+            Constants.LANGUAGE_ENGLISH -> "English"
+            Constants.LANGUAGE_VIETNAMESE -> "Tiếng Việt"
+            else -> "English"
+        }
+        binding.currentLanguageText.text = languageText
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

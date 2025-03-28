@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.healthtech.doccareplus.R
+import com.healthtech.doccareplus.common.base.BaseActivity
 import com.healthtech.doccareplus.databinding.ActivityHomeBinding
 import com.healthtech.doccareplus.utils.AnimationUtils.showWithAnimation
 import com.healthtech.doccareplus.utils.PermissionManager
@@ -23,7 +24,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @AndroidEntryPoint
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : BaseActivity() {
     private lateinit var binding: ActivityHomeBinding
     private lateinit var navController: NavController
     private val viewModel: HomeViewModel by viewModels()

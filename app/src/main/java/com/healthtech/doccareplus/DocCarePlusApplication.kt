@@ -1,12 +1,10 @@
 package com.healthtech.doccareplus
 
-//import com.google.firebase.Firebase
-//import com.google.firebase.database.database
-//import com.google.firebase.initialize
 import android.app.Application
 import android.content.Context
 import com.cloudinary.android.MediaManager
 import com.google.firebase.FirebaseApp
+import com.healthtech.doccareplus.data.local.preferences.UserPreferences
 import com.healthtech.doccareplus.utils.Constants
 import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallConfig
 import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallService
@@ -18,18 +16,18 @@ import com.zegocloud.zimkit.services.ZIMKitConfig
 import dagger.hilt.android.HiltAndroidApp
 import im.zego.zim.enums.ZIMErrorCode
 import timber.log.Timber
+import java.util.*
 
 @HiltAndroidApp
 class DocCarePlusApplication : Application() {
-
-    private var isCloudinaryInitialized = false
-
     override fun onCreate() {
         super.onCreate()
+        val userPrefs = UserPreferences(this)
+        val savedLanguage = userPrefs.getLanguage()
+        updateLanguage(this, savedLanguage)
         FirebaseApp.initializeApp(this)
-//        Firebase.initialize(this)
-//        Firebase.database.setPersistenceEnabled(true)
         Timber.plant(Timber.DebugTree())
+
         configureZegoCloud()
         configureCloudinary()
     }
@@ -61,20 +59,18 @@ class DocCarePlusApplication : Application() {
     }
 
     private fun configureCloudinary() {
-        if (!isCloudinaryInitialized) {
-            try {
-                val config = HashMap<String, String>()
-                config["cloud_name"] = Constants.CLOUDINARY_CLOUD_NAME
-                config["api_key"] = Constants.CLOUDINARY_API_KEY
-                config["api_secret"] = Constants.CLOUDINARY_API_SECRET
+        try {
+            val config = HashMap<String, String>()
+            config["cloud_name"] = Constants.CLOUDINARY_CLOUD_NAME
+            config["api_key"] = Constants.CLOUDINARY_API_KEY
+            config["api_secret"] = Constants.CLOUDINARY_API_SECRET
 
-                MediaManager.init(this, config)
-                isCloudinaryInitialized = true
-                Timber.d("Cloudinary initialized successfully")
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to initialize Cloudinary")
-            }
+            MediaManager.init(this, config)
+            Timber.d("Cloudinary initialized successfully")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to initialize Cloudinary")
         }
+
     }
 
     fun initZegoCallService(userId: String, userName: String) {
@@ -135,5 +131,21 @@ class DocCarePlusApplication : Application() {
         } catch (e: Exception) {
             Timber.e(e, "Failed to initialize ZegoUIKitPrebuiltCallService")
         }
+    }
+
+    fun updateLanguage(context: Context, languageCode: String) {
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        
+        val config = context.resources.configuration
+        config.setLocale(locale)
+        
+        // Cập nhật cấu hình cho toàn bộ ứng dụng
+        context.createConfigurationContext(config)
+        context.resources.updateConfiguration(config, context.resources.displayMetrics)
+        
+        // Áp dụng cấu hình cho base context
+        val baseContext = context.applicationContext
+        baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
     }
 }
