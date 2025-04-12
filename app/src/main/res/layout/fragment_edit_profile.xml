@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Edit Profile"
+                android:text="@string/edit_profile"
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -47,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:backgroundTint="@android:color/transparent"
-                android:text="Save"
+                android:text="@string/save"
                 android:textColor="@color/white" />
         </com.google.android.material.appbar.MaterialToolbar>
 
@@ -97,7 +97,8 @@
                 android:layout_height="18dp"
                 android:layout_gravity="center"
                 android:src="@drawable/change_avatar"
-                app:tint="@color/white" />
+                app:tint="@color/white"
+                tools:ignore="ContentDescription" />
         </FrameLayout>
 
         <!-- Input Fields -->
@@ -108,7 +109,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="24dp"
-            android:hint="Full Name"
+            android:hint="@string/full_name"
             app:layout_constraintTop_toBottomOf="@id/iv_profile">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -126,7 +127,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
-            android:hint="Phone Number"
+            android:hint="@string/phone_number"
             app:layout_constraintTop_toBottomOf="@id/til_name">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -144,7 +145,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
-            android:hint="Email"
+            android:hint="@string/email"
             app:layout_constraintTop_toBottomOf="@id/til_phone">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -175,7 +176,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginTop="16dp"
-            android:hint="About Me"
+            android:hint="@string/about_me"
             app:layout_constraintTop_toBottomOf="@id/til_email">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -194,7 +195,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
-            android:text="Gender"
+            android:text="@string/gender"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -215,20 +216,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
-                android:text="Male" />
+                android:text="@string/male" />
 
             <RadioButton
                 android:id="@+id/rb_female"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
-                android:text="Female" />
+                android:text="@string/female" />
 
             <RadioButton
                 android:id="@+id/rb_other"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Other" />
+                android:text="@string/other" />
         </RadioGroup>
 
         <!-- Physical Stats -->
@@ -238,7 +239,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
-            android:text="Physical Stats"
+            android:text="@string/physical_stats"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -272,7 +273,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:hint="Height (cm)">
+                    android:hint="@string/height_cm">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_height"
@@ -290,7 +291,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:hint="Weight (kg)">
+                    android:hint="@string/weight_kg">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_weight"
@@ -316,7 +317,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:hint="Age (years)">
+                    android:hint="@string/age_years">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_age"
@@ -334,13 +335,14 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:hint="Blood Type">
+                    android:hint="@string/blood_type">
 
                     <AutoCompleteTextView
                         android:id="@+id/et_blood_type"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="none" />
+                        android:inputType="none"
+                        tools:ignore="LabelFor,SpeakableTextPresentCheck" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
             

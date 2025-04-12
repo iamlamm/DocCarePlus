@@ -1,6 +1,5 @@
 package com.healthtech.doccareplus.ui.home
 
-import android.util.Log
 import android.view.View
 import androidx.lifecycle.viewModelScope
 import com.bumptech.glide.Glide
@@ -21,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -194,7 +194,7 @@ class HomeViewModel @Inject constructor(
                         _unreadNotificationCount.value = notifications.count { !it.read }
                     }
                     result.onFailure { error ->
-                        Log.e("observeUnreadNotifications", error.message ?: "Unknow error")
+                        Timber.e(error.message ?: "Unknown error")
                     }
                 }
         }
@@ -213,15 +213,15 @@ class HomeViewModel @Inject constructor(
             try {
                 // Lấy ID người dùng hiện tại
                 val userId = currentUser.value?.id ?: return@launch
-                
+
                 // Gọi service để đánh dấu thông báo đã đọc
                 notificationService.markAsRead(userId, notificationId)
-                
+
                 // Cập nhật lại số lượng thông báo chưa đọc
                 refreshUnreadNotifications()
             } catch (e: Exception) {
                 // Xử lý lỗi nếu cần
-                Log.e("HomeViewModel", "Error marking notification as read", e)
+                Timber.e("Error marking notification as read", e)
             }
         }
     }
@@ -246,7 +246,7 @@ class HomeViewModel @Inject constructor(
             try {
                 // Lấy người dùng hiện tại một cách đồng bộ
                 val user = userRepository.getCurrentUser()
-                
+
                 // Nếu có người dùng, preload cuộc hẹn của họ
                 user?.let { currentUser ->
                     // Chỉ lấy giá trị đầu tiên từ flow để preload dữ liệu
@@ -254,7 +254,22 @@ class HomeViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 // Bỏ qua lỗi khi preload - không ảnh hưởng UX
-                Log.e("HomeViewModel", "Error preloading appointments", e)
+                Timber.e(e, "Error preloading appointments")
+            }
+        }
+    }
+
+    fun updateFCMToken(token: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val result = userRepository.updateFCMToken(token)
+                if (result.isSuccess) {
+                    Timber.d("Token updated successfully")
+                } else {
+                    Timber.e("Failed to update token: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error updating FCM token")
             }
         }
     }

@@ -16,4 +16,6 @@ interface UserRepository {
     suspend fun updateUserProfile(user: User): Result<Unit>
 
     suspend fun getUserAppointments(userId: String): Flow<Result<List<Appointment>>>
+
+    suspend fun updateFCMToken(token: String): Result<Unit>
 }

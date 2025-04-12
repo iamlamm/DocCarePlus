@@ -86,7 +86,8 @@
             android:inputType="textEmailAddress"
             android:paddingVertical="16dp"
             android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
+            android:paddingEnd="12dp"
+            tools:ignore="TextContrastCheck,VisualLintTextFieldSize" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Password Field -->
@@ -111,7 +112,8 @@
         app:passwordToggleEnabled="true"
         app:passwordToggleTint="@color/steel_teal"
         app:startIconDrawable="@drawable/ic_password"
-        app:startIconTint="@color/steel_teal">
+        app:startIconTint="@color/steel_teal"
+        tools:ignore="PrivateResource">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_login_password"
@@ -120,7 +122,8 @@
             android:inputType="textPassword"
             android:paddingVertical="16dp"
             android:paddingStart="12dp"
-            android:paddingEnd="12dp" />
+            android:paddingEnd="12dp"
+            tools:ignore="TextContrastCheck,VisualLintTextFieldSize" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Remember Me & Forgot Password -->
@@ -160,7 +163,8 @@
         app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cb_remember_me" />
+        app:layout_constraintTop_toBottomOf="@id/cb_remember_me"
+        tools:ignore="TextContrastCheck,VisualLintButtonSize" />
 
     <!-- Register Option -->
     <LinearLayout

@@ -16,6 +16,7 @@ import com.healthtech.doccareplus.ui.home.HomeActivity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import javax.inject.Inject
+import com.google.firebase.messaging.FirebaseMessaging
 
 class NotificationHelper @Inject constructor(
     @ApplicationContext private val context: Context
@@ -137,6 +138,16 @@ class NotificationHelper @Inject constructor(
         } catch (e: SecurityException) {
             Timber.e("Error showing notification", e)
             e.printStackTrace()
+        }
+    }
+
+    fun getFCMToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Timber.d("FCM Token: $token")
+                // Gửi token lên server của bạn
+            }
         }
     }
 }

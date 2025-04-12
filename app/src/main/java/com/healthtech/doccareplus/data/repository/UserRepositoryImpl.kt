@@ -59,6 +59,17 @@ class UserRepositoryImpl @Inject constructor(
             }
     }
 
+    override suspend fun updateFCMToken(token: String): Result<Unit> {
+        val currentUserId = authApi.getCurrentUserId()
+            ?: return Result.failure(Exception("Người dùng chưa đăng nhập"))
+
+        return firebaseApi.updateUserField(
+            userId = currentUserId,
+            fieldName = "fcmToken",
+            fieldValue = token
+        )
+    }
+
     override suspend fun updateUserAvatar(avatarUrl: String): Result<Unit> {
         val currentUserId = authApi.getCurrentUserId()
             ?: return Result.failure(Exception("Người dùng chưa đăng nhập"))
@@ -142,7 +153,7 @@ class UserRepositoryImpl @Inject constructor(
                 fieldValue = it.name
             ).getOrThrow()
         }
-        
+
         Timber.d("Cập nhật thông tin người dùng thành công: ${user.name}")
 
 //        Unit

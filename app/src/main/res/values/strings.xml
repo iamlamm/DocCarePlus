@@ -114,4 +114,24 @@
     <string name="language_settings">Language</string>
     <string name="language_dialog_title">Select Language</string>
     <string name="current_language">Current Language</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="find_your_category">Find Your Category</string>
+    <string name="find_your_doctors">Find Your Doctors</string>
+    <string name="my_appointments">My Appointments</string>
+    <string name="messages">Messages</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="save">Save</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="email">Email</string>
+    <string name="about_me">About Me</string>
+    <string name="gender">Gender</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="other">Other</string>
+    <string name="physical_stats">Physical Stats</string>
+    <string name="height_cm">Height (cm)</string>
+    <string name="weight_kg">Weight (kg)</string>
+    <string name="age_years">Age (years)</string>
+    <string name="blood_type">Blood Type</string>
 </resources>

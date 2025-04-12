@@ -22,7 +22,7 @@
             android:layout_height="?attr/actionBarSize"
             app:layout_scrollFlags="scroll|enterAlways"
             app:navigationIcon="@drawable/custom_btn_back"
-            app:title="Tin nhắn"
+            app:title="@string/messages"
             app:titleCentered="true"
             app:titleTextColor="@color/black" />
 

@@ -50,7 +50,6 @@ class AllDoctorsFragment : BaseFragment() {
         // Hiển thị loading indicator ngay lập tức nếu có
         // binding.progressBarAllDoctors.visibility = View.VISIBLE
 
-        // Initialization in order of priority
         setupToolbar()
         setupAdapter()
         setupRecyclerView()
@@ -58,7 +57,6 @@ class AllDoctorsFragment : BaseFragment() {
         setupBackPressHandling()
 
 
-        // Kiểm tra trạng thái đã load dữ liệu chưa
         if (!hasSetupObservers) {
             observeDoctors()
             observeCategoryInfo()
@@ -88,7 +86,7 @@ class AllDoctorsFragment : BaseFragment() {
             if (visibility == View.VISIBLE) {
                 visibility = View.GONE
                 viewModel.setSearchActive(false)
-                binding.toolbar.title = viewModel.categoryName.value ?: "Find Your Doctor"
+//                binding.toolbar.title = viewModel.categoryName.value ?: "Find Your Doctor"
             } else {
                 visibility = View.VISIBLE
                 viewModel.setSearchActive(true)
@@ -124,7 +122,6 @@ class AllDoctorsFragment : BaseFragment() {
             setNavigationOnClickListener {
                 closeSearchAndNavigateBack()
             }
-            title = "Find Your Doctor"
             setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.action_search -> {

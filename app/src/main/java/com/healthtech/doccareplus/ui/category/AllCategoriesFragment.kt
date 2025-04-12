@@ -57,18 +57,6 @@ class AllCategoriesFragment : BaseFragment() {
     }
 
     private fun setupBackPressHandling() {
-//        requireActivity().onBackPressedDispatcher.addCallback(
-//            viewLifecycleOwner,
-//            object : OnBackPressedCallback(true) {
-//                override fun handleOnBackPressed() {
-//                    if (binding.searchView.visibility == View.VISIBLE) {
-//                        toggleSearchView()
-//                    } else {
-//                        isEnabled = false
-//                        requireActivity().onBackPressedDispatcher.onBackPressed()
-//                    }
-//                }
-//            })
         requireActivity().onBackPressedDispatcher.addCallback(
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
@@ -79,9 +67,7 @@ class AllCategoriesFragment : BaseFragment() {
                         binding.searchView.clearFocus()
                         binding.searchView.visibility = View.GONE
                         viewModel.setSearchActive(false)
-                        binding.toolbar.title = "Find Your Category"
                     } else {
-                        // Cho phép hành vi back mặc định
                         isEnabled = false
                         requireActivity().onBackPressedDispatcher.onBackPressed()
                     }
@@ -93,10 +79,8 @@ class AllCategoriesFragment : BaseFragment() {
     private fun setupToolbar() {
         binding.toolbar.apply {
             setNavigationOnClickListener {
-//                requireActivity().onBackPressedDispatcher.onBackPressed()
                 closeSearchAndNavigateBack()
             }
-            title = "Find Your Category"
 
             // Xử lý click vào nút search
             setOnMenuItemClickListener { menuItem ->
@@ -211,7 +195,7 @@ class AllCategoriesFragment : BaseFragment() {
             if (visibility == View.VISIBLE) {
                 visibility = View.GONE
                 viewModel.setSearchActive(false)
-                binding.toolbar.title = "Find Your Category"
+//                binding.toolbar.title = "Find Your Category"
             } else {
                 visibility = View.VISIBLE
                 viewModel.setSearchActive(true)
@@ -254,7 +238,7 @@ class AllCategoriesFragment : BaseFragment() {
                 }
             } else {
                 binding.searchView.visibility = View.GONE
-                binding.toolbar.title = "Find Your Category"
+//                binding.toolbar.title = "Find Your Category"
             }
         }
         

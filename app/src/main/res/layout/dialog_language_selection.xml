@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_top_rounded"
@@ -10,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Ngôn ngữ"
+        android:text="@string/language"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
         android:textStyle="bold" />
 
@@ -28,7 +29,8 @@
             android:background="@drawable/selector_language_item"
             android:button="@drawable/selector_radio_button"
             android:padding="16dp"
-            android:text="English" />
+            android:text="English"
+            tools:ignore="HardcodedText" />
 
         <RadioButton
             android:id="@+id/radio_vietnamese"
@@ -37,6 +39,7 @@
             android:background="@drawable/selector_language_item"
             android:button="@drawable/selector_radio_button"
             android:padding="16dp"
-            android:text="Tiếng Việt" />
+            android:text="Tiếng Việt"
+            tools:ignore="HardcodedText" />
     </RadioGroup>
 </LinearLayout>

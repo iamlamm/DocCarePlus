@@ -15,7 +15,7 @@
         android:elevation="4dp"
         app:menu="@menu/search_menu"
         app:navigationIcon="@drawable/custom_btn_back"
-        app:title="Find Your Doctor"
+        app:title="@string/find_your_category"
         app:titleCentered="true"
         app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
